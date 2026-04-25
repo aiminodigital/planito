@@ -31,6 +31,17 @@ const server = http.createServer((req, res) => {
     return res.end(html);
   }
 
+  if (req.method === 'GET' && req.url === '/favicon.svg') {
+    try {
+      const favicon = fs.readFileSync(path.join(__dirname, 'favicon.svg'));
+      res.writeHead(200, { 'Content-Type': 'image/svg+xml' });
+      return res.end(favicon);
+    } catch (e) {
+      res.writeHead(404);
+      return res.end('favicon not found');
+    }
+  }
+
   if (req.method === 'POST' && req.url === '/api/generate') {
     let body = '';
     req.on('data', chunk => body += chunk);
@@ -98,16 +109,8 @@ const server = http.createServer((req, res) => {
       }
     });
     return;
-   if (req.method === 'GET' && req.url === '/favicon.svg') {
-  try {
-    const favicon = fs.readFileSync(path.join(__dirname, 'favicon.svg'));
-    res.writeHead(200, { 'Content-Type': 'image/svg+xml' });
-    return res.end(favicon);
-  } catch (e) {
-    res.writeHead(404);
-    return res.end('favicon not found');
   }
-  
+
   res.writeHead(404);
   res.end('Not found');
 });
