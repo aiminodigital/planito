@@ -98,12 +98,16 @@ const server = http.createServer((req, res) => {
       }
     });
     return;
-    if (req.method === 'GET' && req.url === '/favicon.svg') {
-  const favicon = fs.readFileSync(path.join(__dirname, 'favicon.svg'));
-  res.writeHead(200, { 'Content-Type': 'image/svg+xml' });
-  return res.end(favicon);
+   if (req.method === 'GET' && req.url === '/favicon.svg') {
+  try {
+    const favicon = fs.readFileSync(path.join(__dirname, 'favicon.svg'));
+    res.writeHead(200, { 'Content-Type': 'image/svg+xml' });
+    return res.end(favicon);
+  } catch (e) {
+    res.writeHead(404);
+    return res.end('favicon not found');
   }
-
+  
   res.writeHead(404);
   res.end('Not found');
 });
