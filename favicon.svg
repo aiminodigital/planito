@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
+  <!-- Fondo naranja con bordes redondeados -->
+  <rect width="32" height="32" rx="7" fill="#FF6B35"/>
+
+  <!-- Hoja / documento (blanco, con esquina doblada) -->
+  <path d="M8 5 L20 5 L24 9 L24 27 L8 27 Z" fill="white" opacity="0.95"/>
+  <!-- Esquina doblada -->
+  <path d="M20 5 L20 9 L24 9 Z" fill="#FF6B35" opacity="0.5"/>
+
+  <!-- Líneas de texto en la hoja -->
+  <line x1="11" y1="14" x2="21" y2="14" stroke="#FF6B35" stroke-width="1.4" stroke-linecap="round"/>
+  <line x1="11" y1="17" x2="21" y2="17" stroke="#FF6B35" stroke-width="1.4" stroke-linecap="round"/>
+  <line x1="11" y1="20" x2="17" y2="20" stroke="#FF6B35" stroke-width="1.4" stroke-linecap="round"/>
+
+  <!-- Bolígrafo encima (esquina inferior derecha, diagonal) -->
+  <!-- Cuerpo del boli -->
+  <rect x="17.5" y="17" width="3" height="9" rx="1"
+        fill="#FFD166"
+        transform="rotate(-40, 19, 21.5)"/>
+  <!-- Punta -->
+  <polygon points="19,27.5 17.8,30 20.2,30"
+           fill="#ffffff"
+           transform="rotate(-40, 19, 28)"/>
+</svg>
