@@ -98,6 +98,10 @@ const server = http.createServer((req, res) => {
       }
     });
     return;
+    if (req.method === 'GET' && req.url === '/favicon.svg') {
+  const favicon = fs.readFileSync(path.join(__dirname, 'favicon.svg'));
+  res.writeHead(200, { 'Content-Type': 'image/svg+xml' });
+  return res.end(favicon);
   }
 
   res.writeHead(404);
