@@ -195,7 +195,7 @@ async function genLesson(){
   document.getElementById('li-wrap').style.background='var(--orange-light)';
   document.getElementById('step-loading').style.display='block';
   document.getElementById('loadMsg').textContent='Generando planificación...';
-  try{const t=await api(`Planificación inglés: NivelEd:${ne}, NivelIng:${ni}, Tema:${tema}, Tipo:${ti}, ${mi}min/clase, ${ap}act/día, ${cd}días. Inst:${ins}, Doc:${doc2}, Curso:${cur}, Fecha:${fec}. DC Córdoba. Suma min/día=${mi}.`,'lesson');lp=pj(t);document.getElementById('step-loading').style.display='none';renderLP();showL('step-lesson-preview');}
+  try{const t=await api(`Generá una planificación de inglés con lenguaje docente específico al tema. NivelEd:${ne}, NivelIng:${ni}, Tema:${tema}, Tipo:${ti}, ${mi}min/clase, ${ap}act/día, ${cd}días. Inst:${ins}, Doc:${doc2}, Curso:${cur}, Fecha:${fec}. DC Córdoba. Suma min/día=${mi}. IMPORTANTE: el lenguaje docente debe incluir preguntas y frases concretas relacionadas específicamente con "${tema}", no frases genéricas.`,'lesson');
   catch(e){document.getElementById('step-loading').style.display='none';showL('step-lesson-form');alert('Error: '+e.message);}
 }
 async function modLesson(){
