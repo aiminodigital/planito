@@ -17,13 +17,14 @@ ${CORDOBA_CONTEXT}
 
 NIVEL DE DETALLE OBLIGATORIO — leé con atención:
 - "pasos": pasos numerados que describen la mecánica exacta de la actividad. Ej: "1. La docente escribe las palabras en el pizarrón. 2. Los alumnos recortan cada palabra. 3. Mezclan el orden y lo entregan a otro grupo. 4. El grupo receptor ordena las palabras para descubrir la norma."
-- "lenguajeDocente": las preguntas o frases exactas que el docente dice. Ej: ["How do you say lunes in English?", "What is your favourite colour?", "Repeat after me."]
+- "lenguajeDocente": SOLO preguntas de contenido e instrucciones específicas al tema. Ej: "What do you do every morning?", "How do you say 'desayuno' in English?", "Raise your hand if you wake up before 7am." NO incluyas frases de elogio genéricas como "Great job!", "Well done!" o "Excellent!" — esas no van en este campo.
 - "inicio.descripcion": qué hace y dice el docente para abrir la clase, cómo conecta con la clase anterior.
-- "inicio.lenguajeDocente": preguntas concretas del warm-up.
-- "cierre.descripcion": cómo el docente repasa y cierra, qué pregunta a los alumnos.
+- "inicio.lenguajeDocente": preguntas concretas del warm-up directamente relacionadas con el tema de la clase.
+- "cierre.descripcion": cómo el docente repasa y cierra, qué pregunta a los alumnos sobre lo aprendido.
 - "cierre.anticipacion": qué se anticipa para la próxima clase.
 - "habilidadesLinguisticas": descripción específica de cómo se trabaja cada macro-habilidad en esa clase puntual.
 - "evaluacion.criterios": conductas observables. Ej: ["correcta formación de preguntas", "pronunciación durante Listen and Repeat", "participación en trabajo grupal"].
+- "fundamentacion": 2-3 oraciones que expliquen por qué este tema es relevante para este nivel, qué habilidades comunicativas desarrolla y cómo se alinea al enfoque del DC Córdoba. No mencionar solo el DC — explicar el por qué pedagógico.
 
 Respondé ÚNICAMENTE con JSON válido. Sin texto extra. Sin markdown. Solo el JSON puro con esta estructura exacta:
 {"titulo":"string","nivelEducativo":"string","nivelIdioma":"string","tema":"string","institucion":"string","docente":"string","cursoAnio":"string","fecha":"string","fundamentacion":"string","contenidosCurriculares":"string","propositos":["string"],"dias":[{"numero":1,"titulo":"string","objetivo":"string","habilidadesLinguisticas":{"listening":"string","speaking":"string","reading":"string","writing":"string"},"inicio":{"duracion":0,"descripcion":"string","lenguajeDocente":["string"]},"actividades":[{"nombre":"string","duracion":0,"materiales":"string","descripcion":"string","pasos":["string"],"lenguajeDocente":["string"],"objetivo":"string"}],"cierre":{"duracion":0,"descripcion":"string","anticipacion":"string"},"evaluacion":{"criterios":["string"],"tipo":"string"}}],"recursos":"string","criteriosEvaluacion":["string"]}`;
