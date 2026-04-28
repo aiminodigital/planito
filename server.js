@@ -12,10 +12,21 @@ PRIMARIA: 1°-2°: rutinas, saludos, vocabulario básico. 3°-4°: intercambios 
 SECUNDARIA: Ciclo Básico (1°-3°): cuatro habilidades integradas, presente/pasado/futuro. Ciclo Orientado (4°-6°): autonomía comunicativa, textos argumentativos.
 TERCIARIO: dominio avanzado, análisis lingüístico, didáctica. INSTITUTOS: Marco MCER A1-C2.`;
 
-const LESSON_PROMPT = `Sos un asistente para docentes de inglés de Córdoba, Argentina. Generás planificaciones alineadas al diseño curricular de Córdoba.
+const LESSON_PROMPT = `Sos un asistente para docentes de inglés de Córdoba, Argentina. Generás planificaciones de clase detalladas y accionables, alineadas al diseño curricular de Córdoba.
 ${CORDOBA_CONTEXT}
-Respondé ÚNICAMENTE con JSON válido. Sin texto extra. Sin markdown. Solo el JSON puro con esta estructura:
-{"titulo":"string","nivelEducativo":"string","nivelIdioma":"string","tema":"string","institucion":"string","docente":"string","cursoAnio":"string","fecha":"string","fundamentacion":"string","contenidosCurriculares":"string","propositos":["string"],"dias":[{"numero":1,"titulo":"string","objetivo":"string","actividades":[{"nombre":"string","duracion":0,"materiales":"string","descripcion":"string","objetivo":"string"}]}],"recursos":"string","criteriosEvaluacion":["string"]}`;
+
+NIVEL DE DETALLE OBLIGATORIO — leé con atención:
+- "pasos": pasos numerados que describen la mecánica exacta de la actividad. Ej: "1. La docente escribe las palabras en el pizarrón. 2. Los alumnos recortan cada palabra. 3. Mezclan el orden y lo entregan a otro grupo. 4. El grupo receptor ordena las palabras para descubrir la norma."
+- "lenguajeDocente": las preguntas o frases exactas que el docente dice. Ej: ["How do you say lunes in English?", "What is your favourite colour?", "Repeat after me."]
+- "inicio.descripcion": qué hace y dice el docente para abrir la clase, cómo conecta con la clase anterior.
+- "inicio.lenguajeDocente": preguntas concretas del warm-up.
+- "cierre.descripcion": cómo el docente repasa y cierra, qué pregunta a los alumnos.
+- "cierre.anticipacion": qué se anticipa para la próxima clase.
+- "habilidadesLinguisticas": descripción específica de cómo se trabaja cada macro-habilidad en esa clase puntual.
+- "evaluacion.criterios": conductas observables. Ej: ["correcta formación de preguntas", "pronunciación durante Listen and Repeat", "participación en trabajo grupal"].
+
+Respondé ÚNICAMENTE con JSON válido. Sin texto extra. Sin markdown. Solo el JSON puro con esta estructura exacta:
+{"titulo":"string","nivelEducativo":"string","nivelIdioma":"string","tema":"string","institucion":"string","docente":"string","cursoAnio":"string","fecha":"string","fundamentacion":"string","contenidosCurriculares":"string","propositos":["string"],"dias":[{"numero":1,"titulo":"string","objetivo":"string","habilidadesLinguisticas":{"listening":"string","speaking":"string","reading":"string","writing":"string"},"inicio":{"duracion":0,"descripcion":"string","lenguajeDocente":["string"]},"actividades":[{"nombre":"string","duracion":0,"materiales":"string","descripcion":"string","pasos":["string"],"lenguajeDocente":["string"],"objetivo":"string"}],"cierre":{"duracion":0,"descripcion":"string","anticipacion":"string"},"evaluacion":{"criterios":["string"],"tipo":"string"}}],"recursos":"string","criteriosEvaluacion":["string"]}`;
 
 const ACTIVITY_PROMPT = `Sos un asistente para docentes de inglés de Córdoba, Argentina. Generás actividades listas para usar en el aula, alineadas al DC de Córdoba.
 ${CORDOBA_CONTEXT}
