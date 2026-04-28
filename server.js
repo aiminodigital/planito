@@ -56,7 +56,7 @@ const server = http.createServer((req, res) => {
             { role: 'system', content: systemPrompt },
             { role: 'user', content: userMessage }
           ],
-          max_tokens: 2000,
+          max_tokens: 4000,
           temperature: 0.7
         });
 
