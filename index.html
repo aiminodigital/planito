@@ -275,7 +275,23 @@ h+=`<h1>${p.titulo}</h1><table class="meta"><tr><td><span class="lbl">INSTITUCI�
 if(p.fundamentacion)h+=`<span class="slbl">FUNDAMENTACIÓN</span><p style="font-style:italic;color:#444;">${p.fundamentacion}</p>`;
 if(p.contenidosCurriculares)h+=`<span class="slbl">CONTENIDOS CURRICULARES</span><p>${p.contenidosCurriculares}</p>`;
 if(p.propositos?.length)h+=`<span class="slbl">PROPÓSITOS</span><p>${p.propositos.map(pr=>`<span class="to">${pr}</span>`).join(' ')}</p>`;
-p.dias.forEach(dia=>{h+=`<h2>Día ${dia.numero} — ${dia.titulo}</h2><p style="font-style:italic;color:#6B7280;">Objetivo: ${dia.objetivo}</p>`;dia.actividades.forEach((a,i)=>{h+=`<h3>${i+1}. ${a.nombre} <span class="dur">${a.duracion} min</span></h3><p><b>Materiales:</b> ${a.materiales}</p><p><b>Descripción:</b> ${a.descripcion}</p><p><b>Objetivo:</b> ${a.objetivo}</p>`;});});
+p.dias.forEach(dia=>{
+  h+=`<h2>Día ${dia.numero} — ${dia.titulo}</h2>`;
+  h+=`<p style="font-style:italic;color:#6B7280;margin-bottom:8pt;">Objetivo: ${dia.objetivo}</p>`;
+  if(dia.habilidadesLinguisticas){const hl=dia.habilidadesLinguisticas;h+=`<table style="width:100%;border-collapse:collapse;margin-bottom:10pt;">`;[['LISTENING',hl.listening,'#7C3AED','#F5F3FF'],['SPEAKING',hl.speaking,'#CC4A1A','#FFF3ED'],['READING',hl.reading,'#065F46','#CCFBF1'],['WRITING',hl.writing,'#7A4F00','#FEF9C3']].forEach(([label,text,color,bg])=>{if(text)h+=`<td style="width:25%;padding:5pt;background:${bg};border:1px solid #E5E7EB;vertical-align:top;"><span style="font-size:8pt;font-weight:700;color:${color};display:block;margin-bottom:3pt;">${label}</span><span style="font-size:9pt;color:#374151;">${text}</span></td>`;});h+=`</table>`;}
+  if(dia.inicio){h+=`<div style="border-left:3px solid #06D6A0;padding:6pt 10pt;background:#F0FDF4;margin-bottom:10pt;">`;h+=`<span style="font-size:8pt;font-weight:700;color:#065F46;">INICIO / WARM UP</span> <span style="background:#FFD166;color:#7A4F00;font-size:8pt;font-weight:700;padding:1pt 5pt;">${dia.inicio.duracion} min</span>`;h+=`<p style="margin:4pt 0 0;font-size:10pt;">${dia.inicio.descripcion}</p>`;if(dia.inicio.lenguajeDocente?.length){h+=`<span style="font-size:7pt;font-weight:700;color:#065F46;display:block;margin-top:5pt;">LENGUAJE DOCENTE</span>`;dia.inicio.lenguajeDocente.forEach(q=>{h+=`<p style="font-size:9.5pt;font-style:italic;color:#374151;margin:2pt 0 0;padding-left:8pt;">"${q}"</p>`;});}h+=`</div>`;}
+  h+=`<span style="font-size:8pt;font-weight:700;color:#6B7280;letter-spacing:0.5pt;display:block;margin-bottom:6pt;">DESARROLLO</span>`;
+  dia.actividades.forEach((a,i)=>{
+    h+=`<h3>${i+1}. ${a.nombre} <span class="dur">${a.duracion} min</span></h3>`;
+    h+=`<p><b>Materiales:</b> ${a.materiales}</p>`;
+    h+=`<p><b>Descripción:</b> ${a.descripcion}</p>`;
+    if(a.pasos?.length){h+=`<span style="font-size:7pt;font-weight:700;color:#6B7280;display:block;margin-top:5pt;">PASOS</span>`;a.pasos.forEach((paso,j)=>{h+=`<p style="font-size:10pt;margin:2pt 0 0;padding-left:12pt;"><b>${j+1}.</b> ${paso}</p>`;});}
+    if(a.lenguajeDocente?.length){h+=`<span style="font-size:7pt;font-weight:700;color:#7C3AED;display:block;margin-top:5pt;">LENGUAJE DOCENTE</span>`;a.lenguajeDocente.forEach(q=>{h+=`<p style="font-size:9.5pt;font-style:italic;color:#5B21B6;margin:2pt 0 0;padding-left:8pt;">"${q}"</p>`;});}
+    h+=`<p><b>Objetivo:</b> ${a.objetivo}</p>`;
+  });
+  if(dia.cierre){h+=`<div style="border-left:3px solid #7C3AED;padding:6pt 10pt;background:#F5F3FF;margin-top:10pt;margin-bottom:10pt;">`;h+=`<span style="font-size:8pt;font-weight:700;color:#5B21B6;">CIERRE</span> <span style="background:#FFD166;color:#7A4F00;font-size:8pt;font-weight:700;padding:1pt 5pt;">${dia.cierre.duracion} min</span>`;h+=`<p style="margin:4pt 0 0;font-size:10pt;">${dia.cierre.descripcion}</p>`;if(dia.cierre.anticipacion)h+=`<p style="font-size:9.5pt;font-style:italic;color:#6B7280;margin:4pt 0 0;">Próxima clase: ${dia.cierre.anticipacion}</p>`;h+=`</div>`;}
+  if(dia.evaluacion?.criterios?.length){h+=`<span style="font-size:8pt;font-weight:700;color:#6B7280;display:block;margin-top:6pt;">EVALUACIÓN</span>`;dia.evaluacion.criterios.forEach(c=>{h+=`<p style="font-size:9.5pt;background:#F5F3FF;color:#5B21B6;padding:2pt 6pt;margin:2pt 0;">${c}</p>`;});if(dia.evaluacion.tipo)h+=`<p style="font-size:9pt;font-style:italic;color:#6B7280;">${dia.evaluacion.tipo}</p>`;}
+});
 if(p.recursos)h+=`<span class="slbl">RECURSOS</span><p>${p.recursos}</p>`;
 if(p.criteriosEvaluacion?.length)h+=`<span class="slbl">CRITERIOS DE EVALUACIÓN</span><p>${p.criteriosEvaluacion.map(c=>`<span class="tt">${c}</span>`).join(' ')}</p>`;
 h+=`<p class="footer">Generado con Planito by Aimino Digital · curriculumcordoba.ar</p></body></html>`;
