@@ -58,8 +58,9 @@ const server = http.createServer((req, res) => {
     let body = '';
     req.on('data', chunk => body += chunk);
     req.on('end', () => {
-      try {
-        const { userMessage, mode } = JSON.parse(body);
+  try {
+    const { userMessage, mode } = JSON.parse(body);
+    console.log(`[${new Date().toISOString()}] GENERACIÓN — modo: ${mode}`);
         const systemPrompt = mode === 'activity' ? ACTIVITY_PROMPT : LESSON_PROMPT;
 
         const groqPayload = JSON.stringify({
