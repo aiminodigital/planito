@@ -218,11 +218,22 @@ async function initAuth(){
   if(session){currentUser=session.user;showApp();}
   else{showLogin();}
   sbClient.auth.onAuthStateChange((_,session)=>{
-    if(session){currentUser=session.user;showApp();}
+    if(session){currentUser=session.user;showApp();checkPaymentReturn();}
     else{currentUser=null;showLogin();}
   });
 }
-
+async function checkPaymentReturn(){
+  const params=new URLSearchParams(window.location.search);
+  if(params.get('payment')==='success'){
+    const paymentId=params.get('payment_id');
+    if(paymentId && currentUser){
+      await sb.from('users').update({plan:'pro'}).eq('id',currentUser.id);
+      window.history.replaceState({},'','/');
+      alert('¡Bienvenido a Planito Pro! Tus generaciones ahora son ilimitadas.');
+      location.reload();
+    }
+  }
+}
 function showLogin(){
   document.getElementById('auth-screen').style.display='flex';
   document.getElementById('main-app').style.display='none';
