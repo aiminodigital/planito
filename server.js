@@ -133,7 +133,10 @@ if (userId) {
               // Incrementar contador
               if (userId) {
                 const field = mode === 'lesson' ? 'lesson_count' : 'activity_count';
-                sb.rpc('increment_count', { user_id: userId, field_name: field });
+                const updateData = mode === 'lesson' 
+  ? { lesson_count: (user.lesson_count || 0) + 1 }
+  : { activity_count: (user.activity_count || 0) + 1 };
+await sb.from('users').update(updateData).eq('id', userId);
               }
             } catch (e) {
               res.writeHead(500, { 'Content-Type': 'application/json' });
