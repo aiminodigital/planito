@@ -67,22 +67,24 @@ const server = http.createServer((req, res) => {
 console.log(`[${new Date().toISOString()}] GENERACIÓN — modo: ${mode}`);
 
 // Verificar usuario y límites
+let userRecord = null;
 if (userId) {
-  let { data: user } = await sb.from('users').select('*').eq('id', userId).single();
+  const { data: user } = await sb.from('users').select('*').eq('id', userId).single();
   
   if (!user) {
-    // Primera vez — crear registro
     await sb.from('users').insert({ id: userId, plan: 'free', lesson_count: 0, activity_count: 0 });
-    user = { plan: 'free', lesson_count: 0, activity_count: 0 };
+    userRecord = { plan: 'free', lesson_count: 0, activity_count: 0 };
+  } else {
+    userRecord = user;
   }
 
-  if (user.plan === 'free') {
-    if (mode === 'lesson' && user.lesson_count >= 3) {
+  if (userRecord.plan === 'free') {
+    if (mode === 'lesson' && userRecord.lesson_count >= 3) {
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({ error: 'LIMIT_REACHED' }));
       return;
     }
-    if (mode === 'activity' && user.activity_count >= 3) {
+    if (mode === 'activity' && userRecord.activity_count >= 3) {
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({ error: 'LIMIT_REACHED' }));
       return;
@@ -131,21 +133,15 @@ if (userId) {
               res.writeHead(200, { 'Content-Type': 'application/json' });
               res.end(JSON.stringify({ text }));
               // Incrementar contador
-              if (userId) {
-                const field = mode === 'lesson' ? 'lesson_count' : 'activity_count';
-                const updateData = mode === 'lesson' 
-  ? { lesson_count: (user.lesson_count || 0) + 1 }
-  : { activity_count: (user.activity_count || 0) + 1 };
-sb.from('users').update(updateData).eq('id', userId).then(() => {});
-              }
-            } catch (e) {
-              res.writeHead(500, { 'Content-Type': 'application/json' });
-              res.end(JSON.stringify({ error: 'Error: ' + e.message }));
-            }
-          });
-        });
-
-        apiReq.on('error', err => {
+              if (userId && userRecord) {
+  const updateData = mode === 'lesson'
+    ? { lesson_count: (userRecord.lesson_count || 0) + 1 }
+    : { activity_count: (userRecord.activity_count || 0) + 1 };
+  sb.from('users').update(updateData).eq('id', userId).then(({error}) => {
+    if (error) console.log('Update error:', error);
+  });
+}
+         apiReq.on('error', err => {
           res.writeHead(500, { 'Content-Type': 'application/json' });
           res.end(JSON.stringify({ error: err.message }));
         });
