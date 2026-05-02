@@ -206,7 +206,7 @@
 <script>
 const SUPABASE_URL = 'https://rfqjyiudjmoiflhhlhrc.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJmcWp5aXVkam1vaWZsaGhsaHJjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc1OTg4MjksImV4cCI6MjA5MzE3NDgyOX0.Y1pEn6SXLPIlEP121nBtYsllSfuPe-bJk4cWbC-bsWE';
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const sbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 let tab='lesson',lp=null,act=null,currentUser=null;
 function upd(p){const n=document.getElementById(`${p}-nivelEducativo`).value,s=document.getElementById(`${p}-nivelIdioma`);if(!s)return;if(n==='Primaria')s.value='Beginner (A1)';else if(n==='Terciario'||n==='Instituto de Idiomas')s.value='Intermediate (B1-B2)';}
@@ -214,10 +214,10 @@ function hide(ids){ids.forEach(id=>document.getElementById(id).style.display='no
 function showL(id){['step-lesson-form','step-lesson-preview','step-loading'].forEach(s=>document.getElementById(s).style.display=s===id?'block':'none');}
 function showA(id){['step-activity-form','step-activity-preview','step-loading'].forEach(s=>document.getElementById(s).style.display=s===id?'block':'none');}
 async function initAuth(){
-  const{data:{session}}=await supabase.auth.getSession();
+  const{data:{session}}=await sbClient.auth.getSession();
   if(session){currentUser=session.user;showApp();}
   else{showLogin();}
-  supabase.auth.onAuthStateChange((_,session)=>{
+  sbClient.auth.onAuthStateChange((_,session)=>{
     if(session){currentUser=session.user;showApp();}
     else{currentUser=null;showLogin();}
   });
@@ -234,11 +234,11 @@ function showApp(){
 }
 
 async function signInWithGoogle(){
-  await supabase.auth.signInWithOAuth({provider:'google',options:{redirectTo:'https://planito.onrender.com'}});
+  await sbClient.auth.signInWithOAuth({provider:'google',options:{redirectTo:'https://planito.onrender.com'}});
 }
 
 async function signOut(){
-  await supabase.auth.signOut();
+  await sbClient.auth.signOut();
 }
 function switchTab(t){tab=t;document.getElementById('tab-lesson').className='tab-btn'+(t==='lesson'?' active-orange':'');document.getElementById('tab-activity').className='tab-btn'+(t==='activity'?' active-violet':'');if(t==='lesson'){hide(['step-activity-form','step-activity-preview','step-loading']);showL(lp?'step-lesson-preview':'step-lesson-form');}else{hide(['step-lesson-form','step-lesson-preview','step-loading']);showA(act?'step-activity-preview':'step-activity-form');}}
 async function api(msg,mode){const r=await fetch('/api/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({userMessage:msg,mode})});const d=await r.json();if(d.error)throw new Error(d.error);return d.text;}
