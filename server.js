@@ -2,7 +2,11 @@ const http = require('http');
 const https = require('https');
 const fs = require('fs');
 const path = require('path');
-
+const { createClient } = require('@supabase/supabase-js');
+const sb = createClient(
+  'https://rfqjyiudjmoiflhhlhrc.supabase.co',
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJmcWp5aXVkam1vaWZsaGhsaHJjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc1OTg4MjksImV4cCI6MjA5MzE3NDgyOX0.Y1pEn6SXLPIlEP121nBtYsllSfuPe-bJk4cWbC-bsWE'
+);
 const API_KEY = process.env.GROQ_API_KEY || '';
 const PORT = process.env.PORT || 3000;
 const CORDOBA_CONTEXT = `
@@ -60,7 +64,32 @@ const server = http.createServer((req, res) => {
     req.on('end', () => {
   try {
     const { userMessage, mode } = JSON.parse(body);
-    console.log(`[${new Date().toISOString()}] GENERACIÓN — modo: ${mode}`);
+    const { userMessage, mode, userId } = JSON.parse(body);
+console.log(`[${new Date().toISOString()}] GENERACIÓN — modo: ${mode}`);
+
+// Verificar usuario y límites
+if (userId) {
+  let { data: user } = await sb.from('users').select('*').eq('id', userId).single();
+  
+  if (!user) {
+    // Primera vez — crear registro
+    await sb.from('users').insert({ id: userId, plan: 'free', lesson_count: 0, activity_count: 0 });
+    user = { plan: 'free', lesson_count: 0, activity_count: 0 };
+  }
+
+  if (user.plan === 'free') {
+    if (mode === 'lesson' && user.lesson_count >= 3) {
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: 'LIMIT_REACHED' }));
+      return;
+    }
+    if (mode === 'activity' && user.activity_count >= 3) {
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: 'LIMIT_REACHED' }));
+      return;
+    }
+  }
+}
         const systemPrompt = mode === 'activity' ? ACTIVITY_PROMPT : LESSON_PROMPT;
 
         const groqPayload = JSON.stringify({
@@ -102,6 +131,11 @@ const server = http.createServer((req, res) => {
               }
               res.writeHead(200, { 'Content-Type': 'application/json' });
               res.end(JSON.stringify({ text }));
+              // Incrementar contador
+              if (userId) {
+                const field = mode === 'lesson' ? 'lesson_count' : 'activity_count';
+                sb.rpc('increment_count', { user_id: userId, field_name: field });
+              }
             } catch (e) {
               res.writeHead(500, { 'Content-Type': 'application/json' });
               res.end(JSON.stringify({ error: 'Error: ' + e.message }));
