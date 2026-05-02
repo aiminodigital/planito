@@ -8,7 +8,10 @@ const sb = createClient(
   'https://rfqjyiudjmoiflhhlhrc.supabase.co',
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJmcWp5aXVkam1vaWZsaGhsaHJjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc1OTg4MjksImV4cCI6MjA5MzE3NDgyOX0.Y1pEn6SXLPIlEP121nBtYsllSfuPe-bJk4cWbC-bsWE'
 );
-
+const { MercadoPagoConfig, Preference } = require('mercadopago');
+const mp = new MercadoPagoConfig({ 
+  accessToken: process.env.MP_ACCESS_TOKEN || 'APP_USR-4885300362467777-050216-843f1bbc60f2aa21b64daaa7fad5dd3a-3372666413'
+});
 const API_KEY = process.env.GROQ_API_KEY || '';
 const PORT = process.env.PORT || 3000;
 
