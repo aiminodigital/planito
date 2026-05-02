@@ -59,6 +59,69 @@ const server = http.createServer((req, res) => {
       res.writeHead(200, { 'Content-Type': 'image/svg+xml' });
       return res.end(favicon);
     } catch (e) {
+      if (req.method === 'POST' && req.url === '/api/subscribe') {
+  let body = '';
+  req.on('data', chunk => body += chunk);
+  req.on('end', async () => {
+    try {
+      const { userId, userEmail } = JSON.parse(body);
+      const preference = new Preference(mp);
+      const result = await preference.create({
+        body: {
+          items: [{
+            title: 'Planito Pro — Suscripción mensual',
+            quantity: 1,
+            unit_price: 4000,
+            currency_id: 'ARS'
+          }],
+          payer: { email: userEmail },
+          back_urls: {
+            success: 'https://planito.onrender.com?payment=success',
+            failure: 'https://planito.onrender.com?payment=failure',
+            pending: 'https://planito.onrender.com?payment=pending'
+          },
+          auto_return: 'approved',
+          external_reference: userId,
+          notification_url: 'https://planito.onrender.com/api/webhook'
+        }
+      });
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ checkoutUrl: result.init_point }));
+    } catch (err) {
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: err.message }));
+    }
+  });
+  return;
+}
+
+if (req.method === 'POST' && req.url === '/api/webhook') {
+  let body = '';
+  req.on('data', chunk => body += chunk);
+  req.on('end', async () => {
+    try {
+      const data = JSON.parse(body);
+      if (data.type === 'payment' && data.data?.id) {
+        const { MercadoPagoConfig: MPConfig, Payment } = require('mercadopago');
+        const mpClient = new MPConfig({ accessToken: process.env.MP_ACCESS_TOKEN });
+        const payment = new Payment(mpClient);
+        const paymentData = await payment.get({ id: data.data.id });
+        if (paymentData.status === 'approved') {
+          const userId = paymentData.external_reference;
+          await sb.from('users').update({ plan: 'pro' }).eq('id', userId);
+          console.log(`[PAGO APROBADO] Usuario ${userId} actualizado a Pro`);
+        }
+      }
+      res.writeHead(200);
+      res.end('OK');
+    } catch (err) {
+      console.log('Webhook error:', err.message);
+      res.writeHead(200);
+      res.end('OK');
+    }
+  });
+  return;
+}
       res.writeHead(404);
       return res.end('favicon not found');
     }
