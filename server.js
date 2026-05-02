@@ -242,7 +242,7 @@ if (req.method === 'POST' && req.url === '/api/webhook') {
         const preference = new Preference(mp);
         const result = await preference.create({
           body: {
-            items: [{ title: 'Planito Pro — Suscripción mensual', quantity: 1, unit_price: 4000, currency_id: 'ARS' }],
+            items: [{ title: 'Planito Pro — Suscripción mensual', quantity: 1, unit_price: 1, currency_id: 'ARS' }],
             payer: { email: userEmail },
             back_urls: {
               success: 'https://planito.onrender.com?payment=success',
