@@ -61,7 +61,7 @@ const server = http.createServer((req, res) => {
   if (req.method === 'POST' && req.url === '/api/generate') {
     let body = '';
     req.on('data', chunk => body += chunk);
-    req.on('end', () => {
+    req.on('end', async () => {
   try {
     const { userMessage, mode, userId } = JSON.parse(body);
 console.log(`[${new Date().toISOString()}] GENERACIÓN — modo: ${mode}`);
