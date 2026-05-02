@@ -71,7 +71,7 @@ const server = http.createServer((req, res) => {
           items: [{
             title: 'Planito Pro — Suscripción mensual',
             quantity: 1,
-            unit_price: 4000,
+            unit_price: 1,
             currency_id: 'ARS'
           }],
           payer: { email: userEmail },
