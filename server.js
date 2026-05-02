@@ -63,7 +63,6 @@ const server = http.createServer((req, res) => {
     req.on('data', chunk => body += chunk);
     req.on('end', () => {
   try {
-    const { userMessage, mode } = JSON.parse(body);
     const { userMessage, mode, userId } = JSON.parse(body);
 console.log(`[${new Date().toISOString()}] GENERACIÓN — modo: ${mode}`);
 
