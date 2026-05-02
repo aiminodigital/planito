@@ -241,7 +241,7 @@ async function signOut(){
   await sbClient.auth.signOut();
 }
 function switchTab(t){tab=t;document.getElementById('tab-lesson').className='tab-btn'+(t==='lesson'?' active-orange':'');document.getElementById('tab-activity').className='tab-btn'+(t==='activity'?' active-violet':'');if(t==='lesson'){hide(['step-activity-form','step-activity-preview','step-loading']);showL(lp?'step-lesson-preview':'step-lesson-form');}else{hide(['step-lesson-form','step-lesson-preview','step-loading']);showA(act?'step-activity-preview':'step-activity-form');}}
-async function api(msg,mode){const r=await fetch('/api/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({userMessage:msg,mode})});const d=await r.json();if(d.error)throw new Error(d.error);return d.text;}
+async function api(msg,mode){const r=await fetch('/api/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({userMessage:msg,mode,userId:currentUser?.id})});const d=await r.json();if(d.error)throw new Error(d.error);return d.text;}
 function pj(t){return JSON.parse(t.replace(/```json|```/g,'').trim());}
 
 async function genLesson(){
@@ -253,7 +253,7 @@ async function genLesson(){
   document.getElementById('step-loading').style.display='block';
   document.getElementById('loadMsg').textContent='Generando planificación...';
   try{const t=await api(`Generá una planificación de inglés con lenguaje docente específico al tema. NivelEd:${ne}, NivelIng:${ni}, Tema:${tema}, Tipo:${ti}, ${mi}min/clase, ${ap}act/día, ${cd}días. Inst:${ins}, Doc:${doc2}, Curso:${cur}, Fecha:${fec}. DC Córdoba. Suma min/día=${mi}. IMPORTANTE: el lenguaje docente debe incluir preguntas y frases concretas relacionadas específicamente con "${tema}", no frases genéricas. Máximo 3 pasos por actividad, máximo 2 frases de lenguaje docente por sección.`,'lesson');lp=pj(t);document.getElementById('step-loading').style.display='none';renderLP();showL('step-lesson-preview');}
-  catch(e){document.getElementById('step-loading').style.display='none';showL('step-lesson-form');alert('Error: '+e.message);}
+  catch(e){document.getElementById('step-loading').style.display='none';showL('step-lesson-form');if(e.message==='LIMIT_REACHED'){alert('Alcanzaste el límite gratuito de 3 lesson plans. ¡Próximamente plan Pro!');}else{alert('Error: '+e.message);}}
 }
 async function modLesson(){
   const req=document.getElementById('lp-mod').value.trim();if(!req){alert('Describí la modificación.');return;}
@@ -276,7 +276,7 @@ async function genActivity(){
   document.getElementById('step-loading').style.display='block';
   document.getElementById('loadMsg').textContent='Generando actividad...';
   try{const t=await api(`Actividad inglés: Tipo:${ti}, NivelEd:${ne}, NivelIng:${ni}, Tema:${tema}, Tiempo:${tm}min, Modalidad:${mo}. 8-12 items. DC Córdoba.`,'activity');act=pj(t);document.getElementById('step-loading').style.display='none';renderAct();showA('step-activity-preview');}
-  catch(e){document.getElementById('step-loading').style.display='none';showA('step-activity-form');alert('Error: '+e.message);}
+  catch(e){document.getElementById('step-loading').style.display='none';showA('step-activity-form');if(e.message==='LIMIT_REACHED'){alert('Alcanzaste el límite gratuito de 3 actividades. ¡Próximamente plan Pro!');}else{alert('Error: '+e.message);}}
 }
 async function modActivity(){
   const req=document.getElementById('act-mod').value.trim();if(!req){alert('Describí la modificación.');return;}

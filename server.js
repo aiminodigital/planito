@@ -2,9 +2,19 @@ const http = require('http');
 const https = require('https');
 const fs = require('fs');
 const path = require('path');
+const { createClient } = require('@supabase/supabase-js');
 
+const sb = createClient(
+  'https://rfqjyiudjmoiflhhlhrc.supabase.co',
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJmcWp5aXVkam1vaWZsaGhsaHJjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc1OTg4MjksImV4cCI6MjA5MzE3NDgyOX0.Y1pEn6SXLPIlEP121nBtYsllSfuPe-bJk4cWbC-bsWE'
+);
+const { MercadoPagoConfig, Preference } = require('mercadopago');
+const mp = new MercadoPagoConfig({ 
+  accessToken: process.env.MP_ACCESS_TOKEN || 'APP_USR-4885300362467777-050216-843f1bbc60f2aa21b64daaa7fad5dd3a-3372666413'
+});
 const API_KEY = process.env.GROQ_API_KEY || '';
 const PORT = process.env.PORT || 3000;
+
 const CORDOBA_CONTEXT = `
 MARCO CURRICULAR — LENGUA EXTRANJERA INGLÉS — PROVINCIA DE CÓRDOBA (curriculumcordoba.ar)
 ENFOQUE: Perspectiva comunicativa e intercultural. Cuatro macro-habilidades: speaking, listening, reading, writing.
@@ -57,10 +67,37 @@ const server = http.createServer((req, res) => {
   if (req.method === 'POST' && req.url === '/api/generate') {
     let body = '';
     req.on('data', chunk => body += chunk);
-    req.on('end', () => {
-  try {
-    const { userMessage, mode } = JSON.parse(body);
-    console.log(`[${new Date().toISOString()}] GENERACIÓN — modo: ${mode}`);
+    req.on('end', async () => {
+      try {
+        const { userMessage, mode, userId } = JSON.parse(body);
+        console.log(`[${new Date().toISOString()}] GENERACIÓN — modo: ${mode}`);
+
+        // Verificar usuario y límites
+        let userRecord = null;
+        if (userId) {
+          const { data: user } = await sb.from('users').select('*').eq('id', userId).single();
+
+          if (!user) {
+            await sb.from('users').insert({ id: userId, plan: 'free', lesson_count: 0, activity_count: 0 });
+            userRecord = { plan: 'free', lesson_count: 0, activity_count: 0 };
+          } else {
+            userRecord = user;
+          }
+
+          if (userRecord.plan === 'free') {
+            if (mode === 'lesson' && userRecord.lesson_count >= 3) {
+              res.writeHead(200, { 'Content-Type': 'application/json' });
+              res.end(JSON.stringify({ error: 'LIMIT_REACHED' }));
+              return;
+            }
+            if (mode === 'activity' && userRecord.activity_count >= 3) {
+              res.writeHead(200, { 'Content-Type': 'application/json' });
+              res.end(JSON.stringify({ error: 'LIMIT_REACHED' }));
+              return;
+            }
+          }
+        }
+
         const systemPrompt = mode === 'activity' ? ACTIVITY_PROMPT : LESSON_PROMPT;
 
         const groqPayload = JSON.stringify({
@@ -102,6 +139,15 @@ const server = http.createServer((req, res) => {
               }
               res.writeHead(200, { 'Content-Type': 'application/json' });
               res.end(JSON.stringify({ text }));
+              // Incrementar contador
+              if (userId && userRecord) {
+                const updateData = mode === 'lesson'
+                  ? { lesson_count: (userRecord.lesson_count || 0) + 1 }
+                  : { activity_count: (userRecord.activity_count || 0) + 1 };
+                sb.from('users').update(updateData).eq('id', userId).then(({ error }) => {
+                  if (error) console.log('Update error:', error);
+                });
+              }
             } catch (e) {
               res.writeHead(500, { 'Content-Type': 'application/json' });
               res.end(JSON.stringify({ error: 'Error: ' + e.message }));
@@ -113,9 +159,9 @@ const server = http.createServer((req, res) => {
           res.writeHead(500, { 'Content-Type': 'application/json' });
           res.end(JSON.stringify({ error: err.message }));
         });
-
         apiReq.write(groqPayload);
         apiReq.end();
+
       } catch (err) {
         res.writeHead(500, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ error: err.message }));
