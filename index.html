@@ -227,7 +227,7 @@ async function checkPaymentReturn(){
   if(params.get('payment')==='success'){
     const paymentId=params.get('payment_id');
     if(paymentId && currentUser){
-      await sb.from('users').update({plan:'pro'}).eq('id',currentUser.id);
+      await sbClient.from('users').update({plan:'pro'}).eq('id',currentUser.id);
       window.history.replaceState({},'','/');
       alert('¡Bienvenido a Planito Pro! Tus generaciones ahora son ilimitadas.');
       location.reload();
