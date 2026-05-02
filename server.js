@@ -136,7 +136,7 @@ if (userId) {
                 const updateData = mode === 'lesson' 
   ? { lesson_count: (user.lesson_count || 0) + 1 }
   : { activity_count: (user.activity_count || 0) + 1 };
-await sb.from('users').update(updateData).eq('id', userId);
+sb.from('users').update(updateData).eq('id', userId);
               }
             } catch (e) {
               res.writeHead(500, { 'Content-Type': 'application/json' });
