@@ -240,6 +240,27 @@ async function signInWithGoogle(){
 async function signOut(){
   await sbClient.auth.signOut();
 }
+async function showUpgradeModal(){
+  const overlay=document.createElement('div');
+  overlay.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;display:flex;align-items:center;justify-content:center;';
+  overlay.innerHTML=`<div style="background:white;border-radius:20px;padding:32px 24px;max-width:320px;width:90%;text-align:center;">
+    <p style="font-size:22px;">🚀</p>
+    <p style="font-size:18px;font-weight:900;color:#1A1A2E;margin:8px 0;">Límite gratuito alcanzado</p>
+    <p style="font-size:13px;color:#6B7280;margin-bottom:24px;">Generaste tus 3 planificaciones gratuitas. Pasate a Pro para generaciones ilimitadas.</p>
+    <div style="background:#F5F3FF;border-radius:12px;padding:16px;margin-bottom:24px;">
+      <p style="font-size:24px;font-weight:900;color:#7C3AED;">ARS $4.000<span style="font-size:13px;font-weight:600;">/mes</span></p>
+      <p style="font-size:12px;color:#6B7280;margin-top:4px;">Lesson plans y actividades ilimitadas</p>
+    </div>
+    <button id="btn-upgrade" style="width:100%;padding:13px;background:#7C3AED;color:white;border:none;border-radius:14px;font-size:15px;font-weight:800;font-family:'Nunito',sans-serif;cursor:pointer;margin-bottom:10px;">Mejorar a Pro</button>
+    <button onclick="this.closest('div').parentElement.remove()" style="background:none;border:none;font-size:13px;color:#6B7280;cursor:pointer;font-family:'Nunito',sans-serif;">Ahora no</button>
+  </div>`;
+  document.body.appendChild(overlay);
+  document.getElementById('btn-upgrade').onclick=async()=>{
+    const r=await fetch('/api/subscribe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({userId:currentUser?.id,userEmail:currentUser?.email})});
+    const d=await r.json();
+    if(d.checkoutUrl)window.location.href=d.checkoutUrl;
+  };
+}  
 function switchTab(t){tab=t;document.getElementById('tab-lesson').className='tab-btn'+(t==='lesson'?' active-orange':'');document.getElementById('tab-activity').className='tab-btn'+(t==='activity'?' active-violet':'');if(t==='lesson'){hide(['step-activity-form','step-activity-preview','step-loading']);showL(lp?'step-lesson-preview':'step-lesson-form');}else{hide(['step-lesson-form','step-lesson-preview','step-loading']);showA(act?'step-activity-preview':'step-activity-form');}}
 async function api(msg,mode){const r=await fetch('/api/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({userMessage:msg,mode,userId:currentUser?.id})});const d=await r.json();if(d.error)throw new Error(d.error);return d.text;}
 function pj(t){return JSON.parse(t.replace(/```json|```/g,'').trim());}
@@ -253,7 +274,7 @@ async function genLesson(){
   document.getElementById('step-loading').style.display='block';
   document.getElementById('loadMsg').textContent='Generando planificación...';
   try{const t=await api(`Generá una planificación de inglés con lenguaje docente específico al tema. NivelEd:${ne}, NivelIng:${ni}, Tema:${tema}, Tipo:${ti}, ${mi}min/clase, ${ap}act/día, ${cd}días. Inst:${ins}, Doc:${doc2}, Curso:${cur}, Fecha:${fec}. DC Córdoba. Suma min/día=${mi}. IMPORTANTE: el lenguaje docente debe incluir preguntas y frases concretas relacionadas específicamente con "${tema}", no frases genéricas. Máximo 3 pasos por actividad, máximo 2 frases de lenguaje docente por sección.`,'lesson');lp=pj(t);document.getElementById('step-loading').style.display='none';renderLP();showL('step-lesson-preview');}
-  catch(e){document.getElementById('step-loading').style.display='none';showL('step-lesson-form');if(e.message==='LIMIT_REACHED'){alert('Alcanzaste el límite gratuito de 3 lesson plans. ¡Próximamente plan Pro!');}else{alert('Error: '+e.message);}}
+  catch(e){document.getElementById('step-loading').style.display='none';showL('step-lesson-form');if(e.message==='LIMIT_REACHED'){showUpgradeModal();}else{alert('Error: '+e.message);}}
 }
 async function modLesson(){
   const req=document.getElementById('lp-mod').value.trim();if(!req){alert('Describí la modificación.');return;}
@@ -276,7 +297,7 @@ async function genActivity(){
   document.getElementById('step-loading').style.display='block';
   document.getElementById('loadMsg').textContent='Generando actividad...';
   try{const t=await api(`Actividad inglés: Tipo:${ti}, NivelEd:${ne}, NivelIng:${ni}, Tema:${tema}, Tiempo:${tm}min, Modalidad:${mo}. 8-12 items. DC Córdoba.`,'activity');act=pj(t);document.getElementById('step-loading').style.display='none';renderAct();showA('step-activity-preview');}
-  catch(e){document.getElementById('step-loading').style.display='none';showA('step-activity-form');if(e.message==='LIMIT_REACHED'){alert('Alcanzaste el límite gratuito de 3 actividades. ¡Próximamente plan Pro!');}else{alert('Error: '+e.message);}}
+  catch(e){document.getElementById('step-loading').style.display='none';showA('step-activity-form');if(e.message==='LIMIT_REACHED'){showUpgradeModal();}else{alert('Error: '+e.message);}}
 }
 async function modActivity(){
   const req=document.getElementById('act-mod').value.trim();if(!req){alert('Describí la modificación.');return;}
