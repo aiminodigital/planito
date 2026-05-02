@@ -133,21 +133,40 @@ if (userId) {
               res.writeHead(200, { 'Content-Type': 'application/json' });
               res.end(JSON.stringify({ text }));
               // Incrementar contador
-              if (userId && userRecord) {
-  const updateData = mode === 'lesson'
-    ? { lesson_count: (userRecord.lesson_count || 0) + 1 }
-    : { activity_count: (userRecord.activity_count || 0) + 1 };
-  sb.from('users').update(updateData).eq('id', userId).then(({error}) => {
-    if (error) console.log('Update error:', error);
-  });
-}
-         apiReq.on('error', err => {
-          res.writeHead(500, { 'Content-Type': 'application/json' });
-          res.end(JSON.stringify({ error: err.message }));
-        });
-
-        apiReq.write(groqPayload);
-        apiReq.end();
+             apiRes.on('end', () => {
+  console.log('Groq status:', apiRes.statusCode);
+  try {
+    const parsed = JSON.parse(data);
+    if (parsed.error) {
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      return res.end(JSON.stringify({ error: parsed.error.message }));
+    }
+    const text = parsed.choices?.[0]?.message?.content;
+    if (!text) {
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      return res.end(JSON.stringify({ error: 'Sin respuesta del modelo.' }));
+    }
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ text }));
+    if (userId && userRecord) {
+      const updateData = mode === 'lesson'
+        ? { lesson_count: (userRecord.lesson_count || 0) + 1 }
+        : { activity_count: (userRecord.activity_count || 0) + 1 };
+      sb.from('users').update(updateData).eq('id', userId).then(({error}) => {
+        if (error) console.log('Update error:', error);
+      });
+    }
+  } catch (e) {
+    res.writeHead(500, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ error: 'Error: ' + e.message }));
+  }
+});
+apiReq.on('error', err => {
+  res.writeHead(500, { 'Content-Type': 'application/json' });
+  res.end(JSON.stringify({ error: err.message }));
+});
+apiReq.write(groqPayload);
+apiReq.end();
       } catch (err) {
         res.writeHead(500, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ error: err.message }));
