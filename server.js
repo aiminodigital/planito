@@ -173,12 +173,13 @@ const server = http.createServer((req, res) => {
         apiReq.end();
 
       } catch (err) {
-        res.writeHead(500, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ error: err.message }));
-      }
-    });
-    return;
-  }
+      console.log('Subscribe error:', err.message, err.stack);
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: err.message }));
+    }
+  });
+  return;
+}
 
   // SUBSCRIBE
   if (req.method === 'POST' && req.url === '/api/subscribe') {
