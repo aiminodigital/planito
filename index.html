@@ -292,7 +292,7 @@ async function genLesson(){
   document.getElementById('step-loading').style.display='block';
   document.getElementById('loadMsg').textContent='Generando planificación...';
   try{const t=await api(`Generá una planificación de inglés con lenguaje docente específico al tema. NivelEd:${ne}, NivelIng:${ni}, Tema:${tema}, Tipo:${ti}, ${mi}min/clase, ${ap}act/día, ${cd}días. Inst:${ins}, Doc:${doc2}, Curso:${cur}, Fecha:${fec}. DC Córdoba. Suma min/día=${mi}. IMPORTANTE: el lenguaje docente debe incluir preguntas y frases concretas relacionadas específicamente con "${tema}", no frases genéricas. Máximo 3 pasos por actividad, máximo 2 frases de lenguaje docente por sección.`,'lesson');lp=pj(t);document.getElementById('step-loading').style.display='none';renderLP();showL('step-lesson-preview');}
-  catch(e){document.getElementById('step-loading').style.display='none';showL('step-lesson-form');if(e.message==='LIMIT_REACHED'){showUpgradeModal();}if(e.message==='LIMIT_REACHED'){showUpgradeModal();}
+  catch(e){document.getElementById('step-loading').style.display='none';showL('step-lesson-form');if(e.message==='LIMIT_REACHED'){showUpgradeModal();}
 else if(e.message.includes('Rate limit')||e.message.includes('rate limit')){
   alert('Planito está recibiendo muchas solicitudes en este momento. Esperá unos segundos y volvé a intentarlo.');
 }else if(e.message.includes('tokens per day')||e.message.includes('TPD')){
@@ -302,7 +302,7 @@ else if(e.message.includes('Rate limit')||e.message.includes('rate limit')){
 }else{
   alert('Algo salió mal. Por favor intentá de nuevo en unos segundos.');
 }
-}
+}}
 async function modLesson(){
   const req=document.getElementById('lp-mod').value.trim();if(!req){alert('Describí la modificación.');return;}
   document.getElementById('lp-modBtn').disabled=true;
@@ -324,7 +324,7 @@ async function genActivity(){
   document.getElementById('step-loading').style.display='block';
   document.getElementById('loadMsg').textContent='Generando actividad...';
   try{const t=await api(`Actividad inglés: Tipo:${ti}, NivelEd:${ne}, NivelIng:${ni}, Tema:${tema}, Tiempo:${tm}min, Modalidad:${mo}. 8-12 items. DC Córdoba.`,'activity');act=pj(t);document.getElementById('step-loading').style.display='none';renderAct();showA('step-activity-preview');}
-  catch(e){document.getElementById('step-loading').style.display='none';showA('step-activity-form');if(e.message==='LIMIT_REACHED'){showUpgradeModal();}if(e.message==='LIMIT_REACHED'){showUpgradeModal();}
+  catch(e){document.getElementById('step-loading').style.display='none';showA('step-activity-form');if(e.message==='LIMIT_REACHED'){showUpgradeModal();}
 else if(e.message.includes('Rate limit')||e.message.includes('rate limit')){
   alert('Planito está recibiendo muchas solicitudes en este momento. Esperá unos segundos y volvé a intentarlo.');
 }else if(e.message.includes('tokens per day')||e.message.includes('TPD')){
@@ -334,7 +334,7 @@ else if(e.message.includes('Rate limit')||e.message.includes('rate limit')){
 }else{
   alert('Algo salió mal. Por favor intentá de nuevo en unos segundos.');
 }
-}
+}}
 async function modActivity(){
   const req=document.getElementById('act-mod').value.trim();if(!req){alert('Describí la modificación.');return;}
   document.getElementById('act-modBtn').disabled=true;
