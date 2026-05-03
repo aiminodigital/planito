@@ -267,10 +267,8 @@ async function showUpgradeModal(){
     <button onclick="this.closest('div').parentElement.remove()" style="background:none;border:none;font-size:13px;color:#6B7280;cursor:pointer;font-family:'Nunito',sans-serif;">Ahora no</button>
   </div>`;
   document.body.appendChild(overlay);
-  document.getElementById('btn-upgrade').onclick=async()=>{
-    const r=await fetch('/api/subscribe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({userId:currentUser?.id,userEmail:currentUser?.email})});
-    const d=await r.json();
-    if(d.checkoutUrl)window.location.href=d.checkoutUrl;
+  document.getElementById('btn-upgrade').onclick=()=>{
+    window.open('https://mpago.li/1E9odf8','_blank');
   };
 }  
 function switchTab(t){tab=t;document.getElementById('tab-lesson').className='tab-btn'+(t==='lesson'?' active-orange':'');document.getElementById('tab-activity').className='tab-btn'+(t==='activity'?' active-violet':'');if(t==='lesson'){hide(['step-activity-form','step-activity-preview','step-loading']);showL(lp?'step-lesson-preview':'step-lesson-form');}else{hide(['step-lesson-form','step-lesson-preview','step-loading']);showA(act?'step-activity-preview':'step-activity-form');}}
