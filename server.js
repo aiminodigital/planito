@@ -10,7 +10,7 @@ const sb = createClient(
 );
 const { MercadoPagoConfig, Preference } = require('mercadopago');
 const mp = new MercadoPagoConfig({ 
-  accessToken: process.env.MP_ACCESS_TOKEN || 'APP_USR-4885300362467777-050216-843f1bbc60f2aa21b64daaa7fad5dd3a-3372666413'
+  accessToken: process.env.MP_ACCESS_TOKEN || 'APP_USR-7594300379679506-050216-2548d2621c8dc6274a48e6df3d7c5bbc-685625756'
 });
 const API_KEY = process.env.GROQ_API_KEY || '';
 const PORT = process.env.PORT || 3000;
