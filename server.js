@@ -3,15 +3,17 @@ const https = require('https');
 const fs = require('fs');
 const path = require('path');
 const { createClient } = require('@supabase/supabase-js');
+const { MercadoPagoConfig, Preference } = require('mercadopago');
 
 const sb = createClient(
   'https://rfqjyiudjmoiflhhlhrc.supabase.co',
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJmcWp5aXVkam1vaWZsaGhsaHJjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc1OTg4MjksImV4cCI6MjA5MzE3NDgyOX0.Y1pEn6SXLPIlEP121nBtYsllSfuPe-bJk4cWbC-bsWE'
 );
-const { MercadoPagoConfig, Preference } = require('mercadopago');
-const mp = new MercadoPagoConfig({ 
-  accessToken: process.env.MP_ACCESS_TOKEN || 'APP_USR-7594300379679506-050216-2548d2621c8dc6274a48e6df3d7c5bbc-685625756'
+
+const mp = new MercadoPagoConfig({
+  accessToken: process.env.MP_ACCESS_TOKEN || ''
 });
+
 const API_KEY = process.env.GROQ_API_KEY || '';
 const PORT = process.env.PORT || 3000;
 
@@ -47,91 +49,33 @@ IMPORTANTE: El campo "opciones" solo se usa para Multiple Choice. Para otros tip
 
 const server = http.createServer((req, res) => {
 
-  if (req.method === 'GET' && (req.url === '/legal' || req.url === '/legal/')) {
+  // HOME
+  if (req.method === 'GET' && (req.url === '/' || req.url.startsWith('/?'))) {
     const html = fs.readFileSync(path.join(__dirname, 'index.html'));
     res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
     return res.end(html);
   }
 
+  // LEGAL
+  if (req.method === 'GET' && (req.url === '/legal' || req.url === '/legal/')) {
+    const legal = fs.readFileSync(path.join(__dirname, 'legal.html'));
+    res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+    return res.end(legal);
+  }
+
+  // FAVICON
   if (req.method === 'GET' && req.url === '/favicon.svg') {
     try {
       const favicon = fs.readFileSync(path.join(__dirname, 'favicon.svg'));
       res.writeHead(200, { 'Content-Type': 'image/svg+xml' });
       return res.end(favicon);
     } catch (e) {
-      if (req.method === 'POST' && req.url === '/api/subscribe') {
-  let body = '';
-  req.on('data', chunk => body += chunk);
-  req.on('end', async () => {
-    try {
-      const { userId, userEmail } = JSON.parse(body);
-      const preference = new Preference(mp);
-      const result = await preference.create({
-        body: {
-          items: [{
-            title: 'Planito Pro — Suscripción mensual',
-            quantity: 150,
-            unit_price: 150,
-            currency_id: 'ARS'
-          }],
-          payer: { email: userEmail },
-          back_urls: {
-            success: 'https://planito.onrender.com?payment=success',
-            failure: 'https://planito.onrender.com?payment=failure',
-            pending: 'https://planito.onrender.com?payment=pending'
-          },
-          auto_return: 'approved',
-          external_reference: userId,
-          notification_url: 'https://planito.onrender.com/api/webhook'
-        }
-      });
-      res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ checkoutUrl: result.init_point }));
-    } catch (err) {
-      res.writeHead(500, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ error: err.message }));
-    }
-  });
-  return;
-}
-
-if (req.method === 'POST' && req.url === '/api/webhook') {
-  let body = '';
-  req.on('data', chunk => body += chunk);
-  req.on('end', async () => {
-    try {
-      const data = JSON.parse(body);
-      if (data.type === 'payment' && data.data?.id) {
-        const { MercadoPagoConfig: MPConfig, Payment } = require('mercadopago');
-        const mpClient = new MPConfig({ accessToken: process.env.MP_ACCESS_TOKEN });
-        const payment = new Payment(mpClient);
-        const paymentData = await payment.get({ id: data.data.id });
-        if (paymentData.status === 'approved') {
-          const userId = paymentData.external_reference;
-          await sb.from('users').update({ plan: 'pro' }).eq('id', userId);
-          console.log(`[PAGO APROBADO] Usuario ${userId} actualizado a Pro`);
-        }
-      }
-      res.writeHead(200);
-      res.end('OK');
-    } catch (err) {
-      console.log('Webhook error:', err.message);
-      res.writeHead(200);
-      res.end('OK');
-    }
-  });
-  return;
-}
-      if (req.method === 'GET' && req.url === '/legal') {
-  const legal = fs.readFileSync(path.join(__dirname, 'legal.html'));
-  res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
-  return res.end(legal);
-}
       res.writeHead(404);
       return res.end('favicon not found');
     }
   }
 
+  // GENERATE
   if (req.method === 'POST' && req.url === '/api/generate') {
     let body = '';
     req.on('data', chunk => body += chunk);
@@ -140,7 +84,6 @@ if (req.method === 'POST' && req.url === '/api/webhook') {
         const { userMessage, mode, userId } = JSON.parse(body);
         console.log(`[${new Date().toISOString()}] GENERACIÓN — modo: ${mode}`);
 
-        // Verificar usuario y límites
         let userRecord = null;
         if (userId) {
           const { data: user } = await sb.from('users').select('*').eq('id', userId).single();
@@ -207,7 +150,6 @@ if (req.method === 'POST' && req.url === '/api/webhook') {
               }
               res.writeHead(200, { 'Content-Type': 'application/json' });
               res.end(JSON.stringify({ text }));
-              // Incrementar contador
               if (userId && userRecord) {
                 const updateData = mode === 'lesson'
                   ? { lesson_count: (userRecord.lesson_count || 0) + 1 }
@@ -238,6 +180,7 @@ if (req.method === 'POST' && req.url === '/api/webhook') {
     return;
   }
 
+  // SUBSCRIBE
   if (req.method === 'POST' && req.url === '/api/subscribe') {
     let body = '';
     req.on('data', chunk => body += chunk);
@@ -247,7 +190,7 @@ if (req.method === 'POST' && req.url === '/api/webhook') {
         const preference = new Preference(mp);
         const result = await preference.create({
           body: {
-            items: [{ title: 'Planito Pro — Suscripción mensual', quantity: 1, unit_price: 1, currency_id: 'ARS' }],
+            items: [{ title: 'Planito Pro — Suscripción mensual', quantity: 1, unit_price: 500, currency_id: 'ARS' }],
             payer: { email: userEmail },
             back_urls: {
               success: 'https://planito.onrender.com?payment=success',
@@ -269,6 +212,7 @@ if (req.method === 'POST' && req.url === '/api/webhook') {
     return;
   }
 
+  // WEBHOOK
   if (req.method === 'POST' && req.url === '/api/webhook') {
     let body = '';
     req.on('data', chunk => body += chunk);
