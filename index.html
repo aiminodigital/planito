@@ -255,15 +255,23 @@ async function signOut(){
 async function showUpgradeModal(){
   const overlay=document.createElement('div');
   overlay.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;display:flex;align-items:center;justify-content:center;';
-  overlay.innerHTML=`<div style="background:white;border-radius:20px;padding:32px 24px;max-width:320px;width:90%;text-align:center;">
+  overlay.innerHTML=`<div style="background:white;border-radius:20px;padding:32px 24px;max-width:340px;width:90%;text-align:center;">
     <p style="font-size:22px;">🚀</p>
     <p style="font-size:18px;font-weight:900;color:#1A1A2E;margin:8px 0;">Límite gratuito alcanzado</p>
     <p style="font-size:13px;color:#6B7280;margin-bottom:24px;">Generaste tus 3 planificaciones gratuitas. Pasate a Pro para generaciones ilimitadas.</p>
-    <div style="background:#F5F3FF;border-radius:12px;padding:16px;margin-bottom:24px;">
+    <div style="background:#F5F3FF;border-radius:12px;padding:16px;margin-bottom:16px;">
       <p style="font-size:24px;font-weight:900;color:#7C3AED;">ARS $4.000<span style="font-size:13px;font-weight:600;">/mes</span></p>
       <p style="font-size:12px;color:#6B7280;margin-top:4px;">Lesson plans y actividades ilimitadas</p>
     </div>
-    <button id="btn-upgrade" style="width:100%;padding:13px;background:#7C3AED;color:white;border:none;border-radius:14px;font-size:15px;font-weight:800;font-family:'Nunito',sans-serif;cursor:pointer;margin-bottom:10px;">Mejorar a Pro</button>
+    <button id="btn-upgrade" style="width:100%;padding:13px;background:#009EE3;color:white;border:none;border-radius:14px;font-size:15px;font-weight:800;font-family:'Nunito',sans-serif;cursor:pointer;margin-bottom:10px;display:flex;align-items:center;justify-content:center;gap:10px;">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M2 8.5C2 5.46 4.46 3 7.5 3h9C19.54 3 22 5.46 22 8.5v7c0 3.04-2.46 5.5-5.5 5.5h-9C4.46 21 2 18.54 2 15.5v-7z" fill="white" opacity="0.2"/><path d="M2 10h20M7 15h2m4 0h4" stroke="white" stroke-width="1.5" stroke-linecap="round"/></svg>
+      Mejorar a Pro — Pagar con MercadoPago
+    </button>
+    <div style="background:#F9FAFB;border-radius:10px;padding:12px 14px;margin-bottom:14px;text-align:left;">
+      <p style="font-size:11.5px;color:#374151;font-weight:600;line-height:1.6;">Después de pagar, contactanos para activar tu plan Pro:</p>
+      <p style="font-size:11.5px;color:#374151;margin-top:6px;">📧 <a href="mailto:aiminodigital@gmail.com" style="color:#7C3AED;font-weight:700;">aiminodigital@gmail.com</a></p>
+      <p style="font-size:11.5px;color:#374151;margin-top:3px;">💬 <a href="https://wa.me/543524418958" style="color:#7C3AED;font-weight:700;">WhatsApp: 351 524 4189 58</a></p>
+    </div>
     <button onclick="this.closest('div').parentElement.remove()" style="background:none;border:none;font-size:13px;color:#6B7280;cursor:pointer;font-family:'Nunito',sans-serif;">Ahora no</button>
   </div>`;
   document.body.appendChild(overlay);
