@@ -122,6 +122,11 @@ if (req.method === 'POST' && req.url === '/api/webhook') {
   });
   return;
 }
+      if (req.method === 'GET' && req.url === '/legal') {
+  const legal = fs.readFileSync(path.join(__dirname, 'legal.html'));
+  res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+  return res.end(legal);
+}
       res.writeHead(404);
       return res.end('favicon not found');
     }
