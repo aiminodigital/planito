@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Legales — Planito</title>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+    body{font-family:'Nunito',sans-serif;background:#FFF0E8;color:#1A1A2E;min-height:100vh;padding:2rem 1rem 4rem;}
+    .container{max-width:720px;margin:0 auto;background:rgba(255,255,255,0.95);border-radius:20px;overflow:hidden;border:1px solid #FFE0D4;}
+    .header{background:#FF6B35;padding:20px 28px;display:flex;align-items:center;gap:14px;}
+    .logo{width:40px;height:40px;background:white;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+    .header-title{font-size:20px;font-weight:900;color:white;}
+    .header-title span{color:#FFD166;}
+    .header-sub{font-size:11px;color:rgba(255,255,255,0.75);font-weight:600;margin-top:2px;}
+    .tabs{display:flex;border-bottom:1.5px solid #E5E7EB;background:white;}
+    .tab{flex:1;padding:13px 16px;border:none;background:none;font-family:'Nunito',sans-serif;font-size:13px;font-weight:800;color:#6B7280;cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-1.5px;}
+    .tab.active{color:#FF6B35;border-bottom-color:#FF6B35;}
+    .content{padding:28px;display:none;}
+    .content.active{display:block;}
+    h2{font-size:20px;font-weight:900;color:#1A1A2E;margin-bottom:6px;}
+    .updated{font-size:11px;color:#9CA3AF;margin-bottom:24px;}
+    h3{font-size:14px;font-weight:800;color:#1A1A2E;margin:20px 0 8px;letter-spacing:0.3px;}
+    p{font-size:13.5px;color:#374151;line-height:1.7;margin-bottom:10px;}
+    ul{font-size:13.5px;color:#374151;line-height:1.7;margin-bottom:10px;padding-left:20px;}
+    ul li{margin-bottom:4px;}
+    .highlight{background:#FFF3ED;border-left:3px solid #FF6B35;padding:10px 14px;border-radius:0 8px 8px 0;margin:14px 0;font-size:13px;color:#374151;}
+    .footer{background:#050a10;padding:14px 24px;display:flex;align-items:center;justify-content:space-between;border-top:1px solid #1a2535;}
+    .footer p{font-size:9px;font-weight:700;color:#2a4a6a;letter-spacing:1.5px;}
+    a{color:#FF6B35;text-decoration:none;}
+    a:hover{text-decoration:underline;}
+    .back{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700;color:#6B7280;margin:16px 28px 0;cursor:pointer;background:none;border:none;font-family:'Nunito',sans-serif;}
+    .back:hover{color:#1A1A2E;}
+  </style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <div class="logo">
+      <svg width="24" height="24" viewBox="0 0 26 26" fill="none"><rect x="2" y="2" width="14" height="17" rx="3" fill="#FF6B35"/><rect x="5" y="6" width="6" height="1.8" rx="0.9" fill="white"/><rect x="5" y="9.5" width="5" height="1.8" rx="0.9" fill="white"/><rect x="5" y="13" width="6" height="1.8" rx="0.9" fill="white"/><circle cx="19" cy="19" r="6" fill="#FFD166"/><path d="M16.5 19l2 2 3-3.5" stroke="#FF6B35" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </div>
+    <div>
+      <p class="header-title">Plan<span>ito</span></p>
+      <p class="header-sub">Información legal</p>
+    </div>
+  </div>
+
+  <button class="back" onclick="window.location.href='/'">← Volver a Planito</button>
+
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('terminos')">Términos de Uso</button>
+    <button class="tab" onclick="switchTab('privacidad')">Política de Privacidad</button>
+  </div>
+
+  <!-- TÉRMINOS DE USO -->
+  <div class="content active" id="tab-terminos">
+    <h2>Términos de Uso</h2>
+    <p class="updated">Última actualización: mayo de 2026</p>
+
+    <h3>1. Identificación</h3>
+    <p>Planito es un servicio de generación de planificaciones de clase para docentes de inglés, desarrollado y operado por <strong>Elian Yasir Aimino</strong> bajo la marca <strong>Aimino Digital</strong> (en adelante, "el Servicio"). Al utilizar Planito, el usuario acepta los presentes Términos de Uso en su totalidad.</p>
+
+    <h3>2. Descripción del Servicio</h3>
+    <p>Planito es una herramienta que utiliza inteligencia artificial para generar planificaciones de clase y actividades pedagógicas para docentes de inglés de la provincia de Córdoba, Argentina, alineadas al Diseño Curricular vigente.</p>
+
+    <h3>3. Planes y precios</h3>
+    <div class="highlight">
+      <strong>Plan Gratuito:</strong> 3 lesson plans y 3 actividades de por vida, sin costo.<br>
+      <strong>Plan Pro:</strong> Generaciones ilimitadas por ARS $4.000/mes.
+    </div>
+    <p>Los precios pueden modificarse con un aviso previo de 15 días. El plan Pro se renueva mensualmente hasta que el usuario lo cancele.</p>
+
+    <h3>4. Registro y acceso</h3>
+    <p>El acceso a Planito requiere autenticación mediante una cuenta de Google. El usuario es responsable de mantener la seguridad de su cuenta. Aimino Digital se reserva el derecho de suspender cuentas que violen estos términos.</p>
+
+    <h3>5. Propiedad intelectual</h3>
+    <p>El contenido generado por Planito (lesson plans, actividades) es de <strong>propiedad del docente</strong> que lo solicitó. El docente puede utilizarlo, modificarlo y distribuirlo libremente con fines educativos.</p>
+    <p>El generador, la interfaz, el código, los prompts y la marca Planito son propiedad exclusiva de Aimino Digital y están protegidos por las leyes de propiedad intelectual vigentes en Argentina.</p>
+
+    <h3>6. Uso aceptable</h3>
+    <p>El usuario se compromete a utilizar Planito exclusivamente con fines educativos legítimos. Está prohibido:</p>
+    <ul>
+      <li>Revender o redistribuir el acceso al servicio</li>
+      <li>Intentar eludir los límites del plan gratuito mediante múltiples cuentas</li>
+      <li>Usar el servicio para generar contenido que infrinja derechos de terceros</li>
+      <li>Realizar ingeniería inversa sobre el sistema</li>
+    </ul>
+
+    <h3>7. Disponibilidad del servicio</h3>
+    <p>Aimino Digital no garantiza disponibilidad ininterrumpida del servicio. El servicio puede estar temporalmente no disponible por mantenimiento, actualizaciones o causas técnicas ajenas al control del equipo.</p>
+
+    <h3>8. Limitación de responsabilidad</h3>
+    <p>El contenido generado por Planito es una herramienta de apoyo pedagógico. El docente es el responsable final de la planificación que utiliza en el aula. Aimino Digital no se responsabiliza por el uso que se haga del contenido generado.</p>
+
+    <h3>9. Modificaciones</h3>
+    <p>Aimino Digital puede modificar estos Términos de Uso en cualquier momento. Los cambios serán notificados mediante la actualización de la fecha en este documento. El uso continuado del servicio implica la aceptación de los nuevos términos.</p>
+
+    <h3>10. Jurisdicción</h3>
+    <p>Estos Términos se rigen por las leyes de la República Argentina. Cualquier controversia será sometida a la jurisdicción de los tribunales ordinarios de la ciudad de Córdoba, Argentina.</p>
+
+    <h3>11. Contacto</h3>
+    <p>Para consultas sobre estos Términos: <a href="mailto:aiminodigital@gmail.com">aiminodigital@gmail.com</a></p>
+  </div>
+
+  <!-- POLÍTICA DE PRIVACIDAD -->
+  <div class="content" id="tab-privacidad">
+    <h2>Política de Privacidad</h2>
+    <p class="updated">Última actualización: mayo de 2026</p>
+
+    <h3>1. Responsable del tratamiento</h3>
+    <p><strong>Elian Yasir Aimino</strong> — Aimino Digital<br>
+    Córdoba, Argentina<br>
+    Contacto: <a href="mailto:aiminodigital@gmail.com">aiminodigital@gmail.com</a></p>
+
+    <h3>2. Datos que recopilamos</h3>
+    <p>Al registrarte con Google, Planito recibe y almacena:</p>
+    <ul>
+      <li><strong>Identificador único de usuario (UUID)</strong> — asignado por Google, usado para gestionar tu cuenta</li>
+      <li><strong>Dirección de correo electrónico</strong> — para identificación y comunicaciones del servicio</li>
+      <li><strong>Contadores de uso</strong> — cantidad de lesson plans y actividades generadas</li>
+      <li><strong>Plan activo</strong> — gratuito o Pro</li>
+    </ul>
+    <p>Planito <strong>no almacena</strong> el contenido de las planificaciones generadas. Los lesson plans y actividades se generan en tiempo real y se descargan directamente al dispositivo del usuario.</p>
+
+    <h3>3. Finalidad del tratamiento</h3>
+    <ul>
+      <li>Gestionar el acceso y la autenticación del usuario</li>
+      <li>Controlar los límites de uso del plan gratuito</li>
+      <li>Gestionar suscripciones y pagos del plan Pro</li>
+      <li>Mejorar el servicio mediante análisis de uso agregado</li>
+    </ul>
+
+    <h3>4. Base legal</h3>
+    <p>El tratamiento de datos se basa en el consentimiento del usuario al registrarse (Ley 25.326 de Protección de Datos Personales, Argentina) y en la ejecución del contrato de servicio.</p>
+
+    <h3>5. Procesadores de datos</h3>
+    <p>Planito utiliza los siguientes servicios de terceros que actúan como procesadores de datos:</p>
+    <ul>
+      <li><strong>Supabase</strong> (supabase.com) — base de datos y autenticación</li>
+      <li><strong>Google OAuth</strong> — autenticación con cuenta de Google</li>
+      <li><strong>MercadoPago</strong> — procesamiento de pagos del plan Pro</li>
+      <li><strong>Groq</strong> — procesamiento de las solicitudes de IA (sin almacenamiento de datos del usuario)</li>
+    </ul>
+
+    <h3>6. Conservación de datos</h3>
+    <p>Los datos del usuario se conservan mientras la cuenta esté activa. El usuario puede solicitar la eliminación de su cuenta y datos en cualquier momento escribiendo a <a href="mailto:aiminodigital@gmail.com">aiminodigital@gmail.com</a>.</p>
+
+    <h3>7. Derechos del usuario</h3>
+    <p>De acuerdo con la Ley 25.326, el usuario tiene derecho a:</p>
+    <ul>
+      <li>Acceder a sus datos personales</li>
+      <li>Rectificar datos inexactos</li>
+      <li>Solicitar la supresión de sus datos</li>
+      <li>Oponerse al tratamiento de sus datos</li>
+    </ul>
+    <p>Para ejercer estos derechos, escribí a <a href="mailto:aiminodigital@gmail.com">aiminodigital@gmail.com</a>. El organismo de control en Argentina es la <strong>Agencia de Acceso a la Información Pública (AAIP)</strong>.</p>
+
+    <h3>8. Seguridad</h3>
+    <p>Los datos se almacenan en servidores de Supabase con cifrado en tránsito (HTTPS) y en reposo. No compartimos datos personales con terceros salvo los procesadores mencionados en el punto 5.</p>
+
+    <h3>9. Cookies y analítica</h3>
+    <p>Planito utiliza Google Analytics para medir tráfico y uso del servicio de forma agregada y anónima. No utilizamos cookies de seguimiento de terceros con fines publicitarios.</p>
+
+    <h3>10. Modificaciones</h3>
+    <p>Esta política puede actualizarse. Los cambios se notifican mediante la actualización de la fecha en este documento.</p>
+  </div>
+
+  <div class="footer">
+    <p>PLANITO — AIMINO DIGITAL</p>
+    <p style="font-size:9px;color:#2a4a6a;font-weight:600;">© 2026 Elian Yasir Aimino</p>
+  </div>
+</div>
+
+<script>
+function switchTab(tab) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.content').forEach(c => c.classList.remove('active'));
+  document.getElementById('tab-' + tab).classList.add('active');
+  event.target.classList.add('active');
+}
+</script>
+</body>
+</html>
