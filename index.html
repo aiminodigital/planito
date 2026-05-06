@@ -265,10 +265,19 @@ async function checkPaymentReturn(){
   if(params.get('payment')==='success'){
     const paymentId=params.get('payment_id');
     if(paymentId && currentUser){
-      await sbClient.from('users').update({plan:'pro'}).eq('id',currentUser.id);
       window.history.replaceState({},'','/');
-      alert('¡Bienvenido a Planito Pro! Tus generaciones ahora son ilimitadas.');
-      location.reload();
+      try{
+        const r=await fetch('/api/verify-payment',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({paymentId,userId:currentUser.id,userEmail:currentUser.email})});
+        const d=await r.json();
+        if(d.success){
+          alert('¡Bienvenido a Planito Pro! Tus generaciones ahora son ilimitadas. Te mandamos un mail de confirmación.');
+          location.reload();
+        } else {
+          console.log('[PAGO] Verificación sin aprobación:', d.status);
+        }
+      }catch(e){
+        console.log('[PAGO] Error verificando pago:', e.message);
+      }
     }
   }
 }

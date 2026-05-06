@@ -2,6 +2,7 @@ const http = require('http');
 const https = require('https');
 const fs = require('fs');
 const path = require('path');
+const nodemailer = require('nodemailer');
 const { createClient } = require('@supabase/supabase-js');
 const { MercadoPagoConfig, Preference } = require('mercadopago');
 
@@ -16,6 +17,54 @@ const mp = new MercadoPagoConfig({
 
 const API_KEY = process.env.GROQ_API_KEY || '';
 const PORT = process.env.PORT || 3000;
+
+// ── EMAIL ──────────────────────────────────────────────
+async function sendProConfirmationEmail(email) {
+  if (!process.env.GMAIL_USER || !process.env.GMAIL_PASS) {
+    console.log('[EMAIL] Variables no configuradas, saltando envío.');
+    return;
+  }
+  try {
+    const transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: { user: process.env.GMAIL_USER, pass: process.env.GMAIL_PASS }
+    });
+    await transporter.sendMail({
+      from: `"Planito" <${process.env.GMAIL_USER}>`,
+      to: email,
+      subject: 'Tu plan Planito Pro está activo ✓',
+      html: `<!DOCTYPE html><html><head><meta charset="UTF-8"></head>
+<body style="font-family:Helvetica,Arial,sans-serif;background:#FFF0E8;margin:0;padding:40px 20px;">
+<div style="max-width:560px;margin:0 auto;background:white;border-radius:16px;overflow:hidden;border:1px solid #FFE0D4;">
+  <div style="background:#FF6B35;padding:32px;text-align:center;">
+    <h1 style="color:white;font-size:28px;margin:0;">Plan<span style="color:#FFD166;">ito</span></h1>
+    <p style="color:rgba(255,255,255,0.8);margin:8px 0 0;font-size:14px;">Tu plan Pro está activo</p>
+  </div>
+  <div style="padding:36px 32px;">
+    <h2 style="color:#1A1A2E;font-size:22px;margin:0 0 16px;">¡Bienvenido a Planito Pro! ✓</h2>
+    <p style="color:#6B7280;font-size:15px;line-height:1.6;margin-bottom:24px;">Tu pago fue acreditado y tu cuenta ya tiene acceso ilimitado. Podés generar todos los lesson plans y actividades que necesites, sin límites.</p>
+    <div style="background:#FFF3ED;border-radius:12px;padding:20px 24px;margin-bottom:24px;">
+      <p style="color:#FF6B35;font-weight:bold;margin:0 0 12px;font-size:14px;">TU PLAN PRO INCLUYE:</p>
+      <p style="color:#374151;margin:4px 0;font-size:14px;">✓ Lesson plans ilimitados</p>
+      <p style="color:#374151;margin:4px 0;font-size:14px;">✓ Actividades ilimitadas</p>
+      <p style="color:#374151;margin:4px 0;font-size:14px;">✓ Exportación en PDF y .doc</p>
+      <p style="color:#374151;margin:4px 0;font-size:14px;">✓ Modificaciones ilimitadas por plan</p>
+    </div>
+    <a href="https://planito.onrender.com" style="display:block;background:#FF6B35;color:white;text-align:center;padding:14px 24px;border-radius:12px;text-decoration:none;font-weight:bold;font-size:15px;margin-bottom:24px;">Ir a Planito →</a>
+    <p style="color:#9CA3AF;font-size:13px;line-height:1.6;">¿Alguna pregunta? Respondé este mail o escribinos a <a href="mailto:${process.env.GMAIL_USER}" style="color:#FF6B35;">${process.env.GMAIL_USER}</a></p>
+  </div>
+  <div style="background:#1A1A2E;padding:16px 32px;text-align:center;">
+    <p style="color:#4a7a9a;font-size:11px;margin:0;">Planito by Aimino Digital · planito.onrender.com</p>
+  </div>
+</div>
+</body></html>`
+    });
+    console.log(`[EMAIL] Confirmación Pro enviada a ${email}`);
+  } catch (err) {
+    console.log('[EMAIL] Error al enviar:', err.message);
+  }
+}
+// ───────────────────────────────────────────────────────
 
 const CORDOBA_CONTEXT = `
 MARCO CURRICULAR — LENGUA EXTRANJERA INGLÉS — PROVINCIA DE CÓRDOBA (curriculumcordoba.ar)
@@ -227,8 +276,15 @@ const server = http.createServer((req, res) => {
           const paymentData = await payment.get({ id: data.data.id });
           if (paymentData.status === 'approved') {
             const userId = paymentData.external_reference;
-            await sb.from('users').update({ plan: 'pro' }).eq('id', userId);
-            console.log(`[PAGO APROBADO] Usuario ${userId} actualizado a Pro`);
+            const payerEmail = paymentData.payer?.email;
+            const { data: existingUser } = await sb.from('users').select('plan').eq('id', userId).single();
+            if (existingUser?.plan !== 'pro') {
+              await sb.from('users').update({ plan: 'pro' }).eq('id', userId);
+              console.log(`[PAGO APROBADO] Usuario ${userId} actualizado a Pro`);
+              if (payerEmail) await sendProConfirmationEmail(payerEmail);
+            } else {
+              console.log(`[WEBHOOK] Usuario ${userId} ya era Pro, ignorando.`);
+            }
           }
         }
         res.writeHead(200);
@@ -237,6 +293,45 @@ const server = http.createServer((req, res) => {
         console.log('Webhook error:', err.message);
         res.writeHead(200);
         res.end('OK');
+      }
+    });
+    return;
+  }
+
+  // VERIFY PAYMENT — llamado desde el front al volver de MP
+  if (req.method === 'POST' && req.url === '/api/verify-payment') {
+    let body = '';
+    req.on('data', chunk => body += chunk);
+    req.on('end', async () => {
+      try {
+        const { paymentId, userId, userEmail } = JSON.parse(body);
+        if (!paymentId || !userId) {
+          res.writeHead(400, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: 'Faltan parámetros' }));
+          return;
+        }
+        const { MercadoPagoConfig: MPConfig, Payment } = require('mercadopago');
+        const mpClient = new MPConfig({ accessToken: process.env.MP_ACCESS_TOKEN });
+        const payment = new Payment(mpClient);
+        const paymentData = await payment.get({ id: paymentId });
+        if (paymentData.status === 'approved' && paymentData.external_reference === userId) {
+          const { data: existingUser } = await sb.from('users').select('plan').eq('id', userId).single();
+          if (existingUser?.plan !== 'pro') {
+            await sb.from('users').update({ plan: 'pro' }).eq('id', userId);
+            const emailToSend = userEmail || paymentData.payer?.email;
+            if (emailToSend) await sendProConfirmationEmail(emailToSend);
+            console.log(`[VERIFY-PAYMENT] Usuario ${userId} actualizado a Pro vía back_url`);
+          }
+          res.writeHead(200, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ success: true, plan: 'pro' }));
+        } else {
+          res.writeHead(200, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ success: false, status: paymentData.status }));
+        }
+      } catch (err) {
+        console.log('[VERIFY-PAYMENT] Error:', err.message);
+        res.writeHead(500, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: err.message }));
       }
     });
     return;
