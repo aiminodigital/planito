@@ -314,7 +314,7 @@ const server = http.createServer((req, res) => {
         const mpClient = new MPConfig({ accessToken: process.env.MP_ACCESS_TOKEN });
         const payment = new Payment(mpClient);
         const paymentData = await payment.get({ id: paymentId });
-        if (paymentData.status === 'approved' && paymentData.external_reference === userId) {
+        if (paymentData.status === 'approved') {
           const { data: existingUser } = await sb.from('users').select('plan').eq('id', userId).single();
           if (existingUser?.plan !== 'pro') {
             await sb.from('users').update({ plan: 'pro' }).eq('id', userId);
@@ -330,6 +330,92 @@ const server = http.createServer((req, res) => {
         }
       } catch (err) {
         console.log('[VERIFY-PAYMENT] Error:', err.message);
+        res.writeHead(500, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: err.message }));
+      }
+    });
+    return;
+  }
+
+  // ACTIVATE PRO — "Ya pagué"
+  if (req.method === 'POST' && req.url === '/api/activate') {
+    let body = '';
+    req.on('data', chunk => body += chunk);
+    req.on('end', async () => {
+      try {
+        const { userId, userEmail, payerEmail } = JSON.parse(body);
+        if (!userId || !userEmail) {
+          res.writeHead(400, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: 'Faltan parámetros' }));
+          return;
+        }
+        const emailToSearch = (payerEmail || userEmail).toLowerCase().trim();
+        const beginDate = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+        const endDate = new Date().toISOString();
+        const searchPath = `/v1/payments/search?status=approved&sort=date_created&criteria=desc&range=date_created&begin_date=${encodeURIComponent(beginDate)}&end_date=${encodeURIComponent(endDate)}`;
+        const mpResult = await new Promise((resolve, reject) => {
+          const opts = {
+            hostname: 'api.mercadopago.com',
+            path: searchPath,
+            method: 'GET',
+            headers: { 'Authorization': `Bearer ${process.env.MP_ACCESS_TOKEN}` }
+          };
+          const r = https.request(opts, mpRes => {
+            let d = '';
+            mpRes.on('data', c => d += c);
+            mpRes.on('end', () => { try { resolve(JSON.parse(d)); } catch(e) { reject(e); } });
+          });
+          r.on('error', reject);
+          r.end();
+        });
+        const payments = mpResult.results || [];
+        const match = payments.find(p => p.payer?.email?.toLowerCase() === emailToSearch);
+        if (!match) {
+          console.log(`[ACTIVATE] No se encontró pago aprobado para ${emailToSearch}`);
+          res.writeHead(200, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ success: false, reason: 'no_payment_found' }));
+          return;
+        }
+        const { data: existing } = await sb.from('users').select('plan').eq('id', userId).single();
+        if (existing?.plan !== 'pro') {
+          await sb.from('users').update({ plan: 'pro' }).eq('id', userId);
+          await sendProConfirmationEmail(userEmail);
+          console.log(`[ACTIVATE] Usuario ${userId} (${userEmail}) activado a Pro`);
+        }
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ success: true }));
+      } catch (err) {
+        console.log('[ACTIVATE] Error:', err.message);
+        res.writeHead(500, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: err.message }));
+      }
+    });
+    return;
+  }
+
+  // FEEDBACK
+  if (req.method === 'POST' && req.url === '/api/feedback') {
+    let body = '';
+    req.on('data', chunk => body += chunk);
+    req.on('end', async () => {
+      try {
+        const { userId, userEmail, message, plan } = JSON.parse(body);
+        if (!message || message.trim().length < 3) {
+          res.writeHead(400, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: 'Mensaje muy corto' }));
+          return;
+        }
+        await sb.from('feedback').insert({
+          user_id: userId || null,
+          user_email: userEmail || null,
+          message: message.trim(),
+          plan: plan || 'free'
+        });
+        console.log(`[FEEDBACK] De ${userEmail || 'anónimo'}: ${message.substring(0, 80)}`);
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: true }));
+      } catch (err) {
+        console.log('[FEEDBACK] Error:', err.message);
         res.writeHead(500, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ error: err.message }));
       }

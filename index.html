@@ -290,6 +290,7 @@ async function showApp(){
   document.getElementById('auth-screen').style.display='none';
   document.getElementById('main-app').style.display='block';
   await refreshUsageBadge();
+  showFeedbackBtn();
 }
 async function refreshUsageBadge(){
   if(!currentUser)return;
@@ -318,8 +319,49 @@ async function signInWithGoogle(){
 async function signOut(){
   await sbClient.auth.signOut();
 }
+function showFeedbackBtn(){
+  if(document.getElementById('feedback-fab'))return;
+  const btn=document.createElement('button');
+  btn.id='feedback-fab';
+  btn.textContent='💬 Feedback';
+  btn.style.cssText='position:fixed;bottom:20px;right:20px;z-index:900;background:#FF6B35;color:white;border:none;border-radius:24px;padding:10px 18px;font-family:Nunito,sans-serif;font-size:13px;font-weight:800;cursor:pointer;box-shadow:0 4px 14px rgba(255,107,53,0.4);transition:transform 0.15s;';
+  btn.onmouseenter=()=>btn.style.transform='scale(1.05)';
+  btn.onmouseleave=()=>btn.style.transform='scale(1)';
+  btn.onclick=showFeedbackModal;
+  document.body.appendChild(btn);
+}
+function showFeedbackModal(){
+  if(document.getElementById('feedback-overlay'))return;
+  const overlay=document.createElement('div');
+  overlay.id='feedback-overlay';
+  overlay.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;display:flex;align-items:center;justify-content:center;';
+  overlay.innerHTML=`<div style="background:white;border-radius:20px;padding:28px 24px;max-width:340px;width:90%;text-align:center;">
+    <p style="font-size:22px;margin-bottom:4px;">💬</p>
+    <p style="font-size:17px;font-weight:900;color:#1A1A2E;margin:0 0 6px;">¿Cómo fue tu experiencia?</p>
+    <p style="font-size:12px;color:#6B7280;margin-bottom:16px;">Tu opinión nos ayuda a mejorar Planito. Es anónimo y tarda 30 segundos.</p>
+    <textarea id="feedback-msg" rows="4" placeholder="Contanos qué te gustó, qué mejorarías o cualquier cosa que quieras decirnos..." style="width:100%;padding:10px 13px;border:1.5px solid #E5E7EB;border-radius:12px;font-size:13px;font-family:Nunito,sans-serif;font-weight:600;color:#1A1A2E;resize:none;outline:none;margin-bottom:12px;box-sizing:border-box;"></textarea>
+    <button onclick="submitFeedback()" style="width:100%;padding:12px;background:#FF6B35;color:white;border:none;border-radius:12px;font-size:14px;font-weight:800;font-family:Nunito,sans-serif;cursor:pointer;margin-bottom:8px;">Enviar feedback</button>
+    <button onclick="document.getElementById('feedback-overlay').remove()" style="background:none;border:none;font-size:12px;color:#9CA3AF;cursor:pointer;font-family:Nunito,sans-serif;">Ahora no</button>
+  </div>`;
+  document.body.appendChild(overlay);
+}
+async function submitFeedback(){
+  const msg=document.getElementById('feedback-msg')?.value.trim();
+  if(!msg||msg.length<5){alert('Por favor escribí un comentario antes de enviar.');return;}
+  try{
+    const{data:ud}=await sbClient.from('users').select('plan').eq('id',currentUser?.id).single().catch(()=>({data:null}));
+    await fetch('/api/feedback',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({userId:currentUser?.id||null,userEmail:currentUser?.email||null,message:msg,plan:ud?.plan||'free'})});
+    document.getElementById('feedback-overlay').remove();
+    const toast=document.createElement('div');
+    toast.style.cssText='position:fixed;bottom:80px;right:20px;z-index:1100;background:#065F46;color:white;padding:12px 18px;border-radius:12px;font-family:Nunito,sans-serif;font-size:13px;font-weight:700;box-shadow:0 4px 14px rgba(0,0,0,0.2);';
+    toast.textContent='¡Gracias por tu feedback! 🙌';
+    document.body.appendChild(toast);
+    setTimeout(()=>toast.remove(),3500);
+  }catch(e){alert('Hubo un error al enviar. Intentá de nuevo.');}
+}
 async function showUpgradeModal(){
   const overlay=document.createElement('div');
+  overlay.id='upgrade-overlay';
   overlay.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;display:flex;align-items:center;justify-content:center;';
   overlay.innerHTML=`<div style="background:white;border-radius:20px;padding:32px 24px;max-width:340px;width:90%;text-align:center;">
     <p style="font-size:22px;">🚀</p>
@@ -329,22 +371,53 @@ async function showUpgradeModal(){
       <p style="font-size:24px;font-weight:900;color:#7C3AED;">ARS $4.000<span style="font-size:13px;font-weight:600;">/mes</span></p>
       <p style="font-size:12px;color:#6B7280;margin-top:4px;">Lesson plans y actividades ilimitadas</p>
     </div>
-    <button id="btn-upgrade" style="width:100%;padding:13px;background:#009EE3;color:white;border:none;border-radius:14px;font-size:15px;font-weight:800;font-family:'Nunito',sans-serif;cursor:pointer;margin-bottom:10px;display:flex;align-items:center;justify-content:center;gap:10px;">
+    <button id="btn-upgrade" style="width:100%;padding:13px;background:#009EE3;color:white;border:none;border-radius:14px;font-size:15px;font-weight:800;font-family:'Nunito',sans-serif;cursor:pointer;margin-bottom:8px;display:flex;align-items:center;justify-content:center;gap:10px;">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M2 8.5C2 5.46 4.46 3 7.5 3h9C19.54 3 22 5.46 22 8.5v7c0 3.04-2.46 5.5-5.5 5.5h-9C4.46 21 2 18.54 2 15.5v-7z" fill="white" opacity="0.2"/><path d="M2 10h20M7 15h2m4 0h4" stroke="white" stroke-width="1.5" stroke-linecap="round"/></svg>
-      Mejorar a Pro — Pagar con MercadoPago
+      Pagar con MercadoPago
     </button>
-    <div style="background:#F9FAFB;border-radius:10px;padding:12px 14px;margin-bottom:14px;text-align:left;">
-      <p style="font-size:11.5px;color:#374151;font-weight:600;line-height:1.6;">Después de pagar, contactanos para activar tu plan Pro:</p>
-      <p style="font-size:11.5px;color:#374151;margin-top:6px;">📧 <a href="mailto:aiminodigital@gmail.com" style="color:#7C3AED;font-weight:700;">aiminodigital@gmail.com</a></p>
-      <p style="font-size:11.5px;color:#374151;margin-top:3px;">💬 <a href="https://wa.me/543524418958" style="color:#7C3AED;font-weight:700;">WhatsApp: 351 524 4189 58</a></p>
+    <button id="btn-already-paid" style="width:100%;padding:11px;background:white;color:#7C3AED;border:1.5px solid #DDD6FE;border-radius:14px;font-size:13px;font-weight:800;font-family:'Nunito',sans-serif;cursor:pointer;margin-bottom:16px;">✓ Ya pagué — activar mi cuenta</button>
+    <div id="activate-email-section" style="display:none;margin-bottom:14px;text-align:left;">
+      <p style="font-size:12px;color:#6B7280;margin-bottom:6px;font-weight:600;">No encontramos el pago con tu email de Google. ¿Con qué email pagaste en MercadoPago?</p>
+      <input id="activate-email-input" type="email" placeholder="email@ejemplo.com" style="width:100%;padding:9px 12px;border:1.5px solid #DDD6FE;border-radius:10px;font-size:13px;font-family:'Nunito',sans-serif;outline:none;box-sizing:border-box;margin-bottom:8px;"/>
+      <button id="btn-activate-confirm" style="width:100%;padding:10px;background:#7C3AED;color:white;border:none;border-radius:10px;font-size:13px;font-weight:800;font-family:'Nunito',sans-serif;cursor:pointer;">Verificar pago</button>
     </div>
-    <button onclick="this.closest('div').parentElement.remove()" style="background:none;border:none;font-size:13px;color:#6B7280;cursor:pointer;font-family:'Nunito',sans-serif;">Ahora no</button>
+    <p id="activate-msg" style="font-size:12px;color:#6B7280;margin-bottom:12px;display:none;"></p>
+    <button onclick="document.getElementById('upgrade-overlay').remove()" style="background:none;border:none;font-size:13px;color:#6B7280;cursor:pointer;font-family:'Nunito',sans-serif;">Ahora no</button>
   </div>`;
   document.body.appendChild(overlay);
-  document.getElementById('btn-upgrade').onclick=()=>{
-    window.open('https://mpago.li/1E9odf8','_blank');
+  document.getElementById('btn-upgrade').onclick=()=>{ window.open('https://mpago.li/1E9odf8','_blank'); };
+  document.getElementById('btn-already-paid').onclick=async()=>{
+    const btn=document.getElementById('btn-already-paid');
+    btn.textContent='Verificando...';btn.disabled=true;
+    const ok=await tryActivate(currentUser?.email);
+    if(!ok){btn.textContent='✓ Ya pagué — activar mi cuenta';btn.disabled=false;document.getElementById('activate-email-section').style.display='block';}
   };
-}  
+  document.getElementById('btn-activate-confirm').onclick=async()=>{
+    const altEmail=document.getElementById('activate-email-input').value.trim();
+    if(!altEmail){alert('Ingresá tu email de MercadoPago.');return;}
+    const btn=document.getElementById('btn-activate-confirm');
+    btn.textContent='Verificando...';btn.disabled=true;
+    const ok=await tryActivate(altEmail);
+    if(!ok){btn.textContent='Verificar pago';btn.disabled=false;const msg=document.getElementById('activate-msg');msg.style.display='block';msg.style.color='#DC2626';msg.textContent='No encontramos un pago aprobado reciente para ese email. Si acabás de pagar, esperá unos minutos e intentá de nuevo.';}
+  };
+}
+async function tryActivate(payerEmail){
+  try{
+    const r=await fetch('/api/activate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({userId:currentUser.id,userEmail:currentUser.email,payerEmail})});
+    const d=await r.json();
+    if(d.success){
+      document.getElementById('upgrade-overlay')?.remove();
+      const toast=document.createElement('div');
+      toast.style.cssText='position:fixed;top:20px;left:50%;transform:translateX(-50%);z-index:1100;background:#065F46;color:white;padding:14px 24px;border-radius:14px;font-family:Nunito,sans-serif;font-size:14px;font-weight:800;box-shadow:0 4px 20px rgba(0,0,0,0.2);';
+      toast.textContent='🎉 ¡Plan Pro activado! Recargando...';
+      document.body.appendChild(toast);
+      setTimeout(()=>location.reload(),2000);
+      return true;
+    }
+    return false;
+  }catch(e){return false;}
+}
+
 function switchTab(t){tab=t;document.getElementById('tab-lesson').className='tab-btn'+(t==='lesson'?' active-orange':'');document.getElementById('tab-activity').className='tab-btn'+(t==='activity'?' active-violet':'');if(t==='lesson'){hide(['step-activity-form','step-activity-preview','step-loading']);showL(lp?'step-lesson-preview':'step-lesson-form');}else{hide(['step-lesson-form','step-lesson-preview','step-loading']);showA(act?'step-activity-preview':'step-activity-form');}}
 async function api(msg,mode){const r=await fetch('/api/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({userMessage:msg,mode,userId:currentUser?.id})});const d=await r.json();if(d.error)throw new Error(d.error);return d.text;}
 function pj(t){return JSON.parse(t.replace(/```json|```/g,'').trim());}
