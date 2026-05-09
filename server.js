@@ -2,18 +2,69 @@ const http = require('http');
 const https = require('https');
 const fs = require('fs');
 const path = require('path');
+const nodemailer = require('nodemailer');
 const { createClient } = require('@supabase/supabase-js');
+const { MercadoPagoConfig, Preference } = require('mercadopago');
 
 const sb = createClient(
   'https://rfqjyiudjmoiflhhlhrc.supabase.co',
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJmcWp5aXVkam1vaWZsaGhsaHJjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc1OTg4MjksImV4cCI6MjA5MzE3NDgyOX0.Y1pEn6SXLPIlEP121nBtYsllSfuPe-bJk4cWbC-bsWE'
 );
-const { MercadoPagoConfig, Preference } = require('mercadopago');
-const mp = new MercadoPagoConfig({ 
-  accessToken: process.env.MP_ACCESS_TOKEN || 'APP_USR-4885300362467777-050216-843f1bbc60f2aa21b64daaa7fad5dd3a-3372666413'
+
+const mp = new MercadoPagoConfig({
+  accessToken: process.env.MP_ACCESS_TOKEN || ''
 });
+
 const API_KEY = process.env.GROQ_API_KEY || '';
 const PORT = process.env.PORT || 3000;
+
+// ── EMAIL ──────────────────────────────────────────────
+async function sendProConfirmationEmail(email) {
+  if (!process.env.GMAIL_USER || !process.env.GMAIL_PASS) {
+    console.log('[EMAIL] Variables no configuradas, saltando envío.');
+    return;
+  }
+  try {
+    const transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: { user: process.env.GMAIL_USER, pass: process.env.GMAIL_PASS }
+    });
+    await transporter.sendMail({
+      from: `"Planito" <${process.env.GMAIL_USER}>`,
+      to: email,
+      subject: 'Tu plan Planito Pro está activo ✓',
+      html: `<!DOCTYPE html><html><head><meta charset="UTF-8"></head>
+<body style="font-family:Helvetica,Arial,sans-serif;background:#FFF0E8;margin:0;padding:40px 20px;">
+<div style="max-width:560px;margin:0 auto;background:white;border-radius:16px;overflow:hidden;border:1px solid #FFE0D4;">
+  <div style="background:#FF6B35;padding:32px;text-align:center;">
+    <h1 style="color:white;font-size:28px;margin:0;">Plan<span style="color:#FFD166;">ito</span></h1>
+    <p style="color:rgba(255,255,255,0.8);margin:8px 0 0;font-size:14px;">Tu plan Pro está activo</p>
+  </div>
+  <div style="padding:36px 32px;">
+    <h2 style="color:#1A1A2E;font-size:22px;margin:0 0 16px;">¡Bienvenido a Planito Pro! ✓</h2>
+    <p style="color:#6B7280;font-size:15px;line-height:1.6;margin-bottom:24px;">Tu pago fue acreditado y tu cuenta ya tiene acceso ilimitado. Podés generar todos los lesson plans y actividades que necesites, sin límites.</p>
+    <div style="background:#FFF3ED;border-radius:12px;padding:20px 24px;margin-bottom:24px;">
+      <p style="color:#FF6B35;font-weight:bold;margin:0 0 12px;font-size:14px;">TU PLAN PRO INCLUYE:</p>
+      <p style="color:#374151;margin:4px 0;font-size:14px;">✓ Lesson plans ilimitados</p>
+      <p style="color:#374151;margin:4px 0;font-size:14px;">✓ Actividades ilimitadas</p>
+      <p style="color:#374151;margin:4px 0;font-size:14px;">✓ Exportación en PDF y .doc</p>
+      <p style="color:#374151;margin:4px 0;font-size:14px;">✓ Modificaciones ilimitadas por plan</p>
+    </div>
+    <a href="https://planito.onrender.com" style="display:block;background:#FF6B35;color:white;text-align:center;padding:14px 24px;border-radius:12px;text-decoration:none;font-weight:bold;font-size:15px;margin-bottom:24px;">Ir a Planito →</a>
+    <p style="color:#9CA3AF;font-size:13px;line-height:1.6;">¿Alguna pregunta? Respondé este mail o escribinos a <a href="mailto:${process.env.GMAIL_USER}" style="color:#FF6B35;">${process.env.GMAIL_USER}</a></p>
+  </div>
+  <div style="background:#1A1A2E;padding:16px 32px;text-align:center;">
+    <p style="color:#4a7a9a;font-size:11px;margin:0;">Planito by Aimino Digital · planito.onrender.com</p>
+  </div>
+</div>
+</body></html>`
+    });
+    console.log(`[EMAIL] Confirmación Pro enviada a ${email}`);
+  } catch (err) {
+    console.log('[EMAIL] Error al enviar:', err.message);
+  }
+}
+// ───────────────────────────────────────────────────────
 
 const CORDOBA_CONTEXT = `
 MARCO CURRICULAR — LENGUA EXTRANJERA INGLÉS — PROVINCIA DE CÓRDOBA (curriculumcordoba.ar)
@@ -47,91 +98,33 @@ IMPORTANTE: El campo "opciones" solo se usa para Multiple Choice. Para otros tip
 
 const server = http.createServer((req, res) => {
 
+  // HOME
   if (req.method === 'GET' && (req.url === '/' || req.url.startsWith('/?'))) {
     const html = fs.readFileSync(path.join(__dirname, 'index.html'));
     res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
     return res.end(html);
   }
 
+  // LEGAL
+  if (req.method === 'GET' && (req.url === '/legal' || req.url === '/legal/')) {
+    const legal = fs.readFileSync(path.join(__dirname, 'legal.html'));
+    res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+    return res.end(legal);
+  }
+
+  // FAVICON
   if (req.method === 'GET' && req.url === '/favicon.svg') {
     try {
       const favicon = fs.readFileSync(path.join(__dirname, 'favicon.svg'));
       res.writeHead(200, { 'Content-Type': 'image/svg+xml' });
       return res.end(favicon);
     } catch (e) {
-      if (req.method === 'POST' && req.url === '/api/subscribe') {
-  let body = '';
-  req.on('data', chunk => body += chunk);
-  req.on('end', async () => {
-    try {
-      const { userId, userEmail } = JSON.parse(body);
-      const preference = new Preference(mp);
-      const result = await preference.create({
-        body: {
-          items: [{
-            title: 'Planito Pro — Suscripción mensual',
-            quantity: 1,
-            unit_price: 1,
-            currency_id: 'ARS'
-          }],
-          payer: { email: userEmail },
-          back_urls: {
-            success: 'https://planito.onrender.com?payment=success',
-            failure: 'https://planito.onrender.com?payment=failure',
-            pending: 'https://planito.onrender.com?payment=pending'
-          },
-          auto_return: 'approved',
-          external_reference: userId,
-          notification_url: 'https://planito.onrender.com/api/webhook'
-        }
-      });
-      res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ checkoutUrl: result.init_point }));
-    } catch (err) {
-      res.writeHead(500, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ error: err.message }));
-    }
-  });
-  return;
-}
-
-if (req.method === 'POST' && req.url === '/api/webhook') {
-  let body = '';
-  req.on('data', chunk => body += chunk);
-  req.on('end', async () => {
-    try {
-      const data = JSON.parse(body);
-      if (data.type === 'payment' && data.data?.id) {
-        const { MercadoPagoConfig: MPConfig, Payment } = require('mercadopago');
-        const mpClient = new MPConfig({ accessToken: process.env.MP_ACCESS_TOKEN });
-        const payment = new Payment(mpClient);
-        const paymentData = await payment.get({ id: data.data.id });
-        if (paymentData.status === 'approved') {
-          const userId = paymentData.external_reference;
-          await sb.from('users').update({ plan: 'pro' }).eq('id', userId);
-          console.log(`[PAGO APROBADO] Usuario ${userId} actualizado a Pro`);
-        }
-      }
-      res.writeHead(200);
-      res.end('OK');
-    } catch (err) {
-      console.log('Webhook error:', err.message);
-      res.writeHead(200);
-      res.end('OK');
-    }
-  });
-  return;
-}
-      if (req.method === 'GET' && req.url === '/legal') {
-  const legal = fs.readFileSync(path.join(__dirname, 'legal.html'));
-  res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
-  return res.end(legal);
-}
       res.writeHead(404);
       return res.end('favicon not found');
     }
   }
 
+  // GENERATE
   if (req.method === 'POST' && req.url === '/api/generate') {
     let body = '';
     req.on('data', chunk => body += chunk);
@@ -140,7 +133,6 @@ if (req.method === 'POST' && req.url === '/api/webhook') {
         const { userMessage, mode, userId } = JSON.parse(body);
         console.log(`[${new Date().toISOString()}] GENERACIÓN — modo: ${mode}`);
 
-        // Verificar usuario y límites
         let userRecord = null;
         if (userId) {
           const { data: user } = await sb.from('users').select('*').eq('id', userId).single();
@@ -207,7 +199,6 @@ if (req.method === 'POST' && req.url === '/api/webhook') {
               }
               res.writeHead(200, { 'Content-Type': 'application/json' });
               res.end(JSON.stringify({ text }));
-              // Incrementar contador
               if (userId && userRecord) {
                 const updateData = mode === 'lesson'
                   ? { lesson_count: (userRecord.lesson_count || 0) + 1 }
@@ -231,13 +222,15 @@ if (req.method === 'POST' && req.url === '/api/webhook') {
         apiReq.end();
 
       } catch (err) {
-        res.writeHead(500, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ error: err.message }));
-      }
-    });
-    return;
-  }
+      console.log('Subscribe error:', err.message, err.stack);
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: err.message }));
+    }
+  });
+  return;
+}
 
+  // SUBSCRIBE
   if (req.method === 'POST' && req.url === '/api/subscribe') {
     let body = '';
     req.on('data', chunk => body += chunk);
@@ -247,7 +240,7 @@ if (req.method === 'POST' && req.url === '/api/webhook') {
         const preference = new Preference(mp);
         const result = await preference.create({
           body: {
-            items: [{ title: 'Planito Pro — Suscripción mensual', quantity: 1, unit_price: 1, currency_id: 'ARS' }],
+            items: [{ title: 'Planito Pro — Suscripción mensual', quantity: 1, unit_price: 500, currency_id: 'ARS' }],
             payer: { email: userEmail },
             back_urls: {
               success: 'https://planito.onrender.com?payment=success',
@@ -269,6 +262,7 @@ if (req.method === 'POST' && req.url === '/api/webhook') {
     return;
   }
 
+  // WEBHOOK
   if (req.method === 'POST' && req.url === '/api/webhook') {
     let body = '';
     req.on('data', chunk => body += chunk);
@@ -282,8 +276,15 @@ if (req.method === 'POST' && req.url === '/api/webhook') {
           const paymentData = await payment.get({ id: data.data.id });
           if (paymentData.status === 'approved') {
             const userId = paymentData.external_reference;
-            await sb.from('users').update({ plan: 'pro' }).eq('id', userId);
-            console.log(`[PAGO APROBADO] Usuario ${userId} actualizado a Pro`);
+            const payerEmail = paymentData.payer?.email;
+            const { data: existingUser } = await sb.from('users').select('plan').eq('id', userId).single();
+            if (existingUser?.plan !== 'pro') {
+              await sb.from('users').update({ plan: 'pro' }).eq('id', userId);
+              console.log(`[PAGO APROBADO] Usuario ${userId} actualizado a Pro`);
+              if (payerEmail) await sendProConfirmationEmail(payerEmail);
+            } else {
+              console.log(`[WEBHOOK] Usuario ${userId} ya era Pro, ignorando.`);
+            }
           }
         }
         res.writeHead(200);
@@ -292,6 +293,45 @@ if (req.method === 'POST' && req.url === '/api/webhook') {
         console.log('Webhook error:', err.message);
         res.writeHead(200);
         res.end('OK');
+      }
+    });
+    return;
+  }
+
+  // VERIFY PAYMENT — llamado desde el front al volver de MP
+  if (req.method === 'POST' && req.url === '/api/verify-payment') {
+    let body = '';
+    req.on('data', chunk => body += chunk);
+    req.on('end', async () => {
+      try {
+        const { paymentId, userId, userEmail } = JSON.parse(body);
+        if (!paymentId || !userId) {
+          res.writeHead(400, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: 'Faltan parámetros' }));
+          return;
+        }
+        const { MercadoPagoConfig: MPConfig, Payment } = require('mercadopago');
+        const mpClient = new MPConfig({ accessToken: process.env.MP_ACCESS_TOKEN });
+        const payment = new Payment(mpClient);
+        const paymentData = await payment.get({ id: paymentId });
+        if (paymentData.status === 'approved' && paymentData.external_reference === userId) {
+          const { data: existingUser } = await sb.from('users').select('plan').eq('id', userId).single();
+          if (existingUser?.plan !== 'pro') {
+            await sb.from('users').update({ plan: 'pro' }).eq('id', userId);
+            const emailToSend = userEmail || paymentData.payer?.email;
+            if (emailToSend) await sendProConfirmationEmail(emailToSend);
+            console.log(`[VERIFY-PAYMENT] Usuario ${userId} actualizado a Pro vía back_url`);
+          }
+          res.writeHead(200, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ success: true, plan: 'pro' }));
+        } else {
+          res.writeHead(200, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ success: false, status: paymentData.status }));
+        }
+      } catch (err) {
+        console.log('[VERIFY-PAYMENT] Error:', err.message);
+        res.writeHead(500, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: err.message }));
       }
     });
     return;
